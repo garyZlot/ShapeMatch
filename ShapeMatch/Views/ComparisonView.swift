@@ -2,7 +2,7 @@
 //  ComparisonView.swift
 //  ShapeMatch
 //
-//  对比结果展示页面 - 显示两张图片和差异标注
+//  对比结果展示页面 - 图层叠加模式
 //
 
 import SwiftUI
@@ -12,21 +12,10 @@ struct ComparisonView: View {
     let rightImage: UIImage
     @StateObject private var viewModel: ComparisonViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedTab: DisplayTab = .sideBySide
 
-    enum DisplayTab: String, CaseIterable {
-        case sideBySide = "并排"
-        case overlay = "叠加"
-        case difference = "差异"
-
-        var icon: String {
-            switch self {
-            case .sideBySide: return "square.split.2x1"
-            case .overlay: return "layers"
-            case .difference: return "circle.circle"
-            }
-        }
-    }
+    @State private var layers: [Layer] = []
+    @State private var selectedLayerId: UUID?
+    @State private var showLayerPanel = true
 
     init(leftImage: UIImage, rightImage: UIImage) {
         self.leftImage = leftImage
@@ -39,84 +28,56 @@ struct ComparisonView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // 显示模式选择
-                Picker("显示模式", selection: $selectedTab) {
-                    ForEach(DisplayTab.allCases, id: \.self) { tab in
-                        Label(tab.rawValue, systemImage: tab.icon)
-                            .tag(tab)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding()
+            ZStack(alignment: .bottom) {
+                // 主画布区域
+                GeometryReader { geometry in
+                    ScrollView([.horizontal, .vertical]) {
+                        ZStack {
+                            // 棋盘格背景（表示透明）
+                            CheckerboardPattern()
 
-                // 图片显示区域
-                ScrollView([.horizontal, .vertical]) {
-                    Group {
-                        switch selectedTab {
-                        case .sideBySide:
-                            SideBySideView(
-                                leftImage: leftImage,
-                                rightImage: rightImage,
-                                differences: viewModel.result?.differences ?? []
-                            )
-                        case .overlay:
-                            OverlayView(
-                                baseImage: leftImage,
-                                overlayImage: rightImage
-                            )
-                        case .difference:
-                            DifferenceView(
-                                leftImage: leftImage,
-                                rightImage: rightImage,
-                                differences: viewModel.result?.differences ?? []
-                            )
-                        }
-                    }
-                }
-
-                Divider()
-
-                // 底部信息栏
-                VStack(spacing: 8) {
-                    if let result = viewModel.result {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("相似度")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Text("\(Int(result.similarity * 100))%")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(result.similarity > 0.8 ? .green : .orange)
-                            }
-
-                            Spacer()
-
-                            VStack(alignment: .trailing, spacing: 4) {
-                                Text("差异点")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Text("\(result.differences.count)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                            // 图层叠加
+                            ForEach(Array(layers.enumerated()), id: \.element.id) { index, layer in
+                                if layer.isVisible {
+                                    DraggableImageView(
+                                        image: layer.image,
+                                        position: binding(for: layer.id, keyPath: \.position),
+                                        scale: binding(for: layer.id, keyPath: \.scale),
+                                        opacity: binding(for: layer.id, keyPath: \.opacity),
+                                        isSelected: selectedLayerId == layer.id,
+                                        onTap: {
+                                            selectedLayerId = layer.id
+                                        }
+                                    )
+                                    .frame(
+                                        width: geometry.size.width,
+                                        height: geometry.size.height
+                                    )
+                                }
                             }
                         }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                    } else if viewModel.isProcessing {
-                        HStack {
-                            ProgressView()
-                            Text("正在分析...")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                        .frame(
+                            width: geometry.size.width * 1.5,
+                            height: geometry.size.height * 1.5
+                        )
+                        .onTapGesture {
+                            // 点击空白处取消选择
+                            selectedLayerId = nil
                         }
                     }
                 }
-                .padding()
+
+                // 图层面板
+                VStack {
+                    Spacer()
+                    LayerControlPanel(
+                        layers: $layers,
+                        selectedLayerId: $selectedLayerId,
+                        showPanel: $showLayerPanel
+                    )
+                }
             }
-            .navigationTitle("对比结果")
+            .navigationTitle("图层对比")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -126,168 +87,166 @@ struct ComparisonView: View {
                         Label("返回", systemImage: "xmark")
                     }
                 }
+
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        // TODO: 分享功能
-                    } label: {
-                        Label("分享", systemImage: "square.and.arrow.up")
-                    }
-                    .disabled(true)
-                }
-            }
-        }
-        .task {
-            await viewModel.performComparison()
-        }
-    }
-}
-
-// MARK: - 并排显示视图
-struct SideBySideView: View {
-    let leftImage: UIImage
-    let rightImage: UIImage
-    let differences: [DifferencePoint]
-
-    var body: some View {
-        HStack(spacing: 0) {
-            // 左图
-            VStack {
-                Text("原图")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Image(uiImage: leftImage)
-                    .resizable()
-                    .scaledToFit()
-                    .overlay {
-                        // 差异标注
-                        DifferenceOverlay(differences: differences)
-                    }
-            }
-            .frame(maxWidth: .infinity)
-
-            Divider()
-
-            // 右图
-            VStack {
-                Text("对比图")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Image(uiImage: rightImage)
-                    .resizable()
-                    .scaledToFit()
-                    .overlay {
-                        DifferenceOverlay(differences: differences)
-                    }
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
-// MARK: - 叠加显示视图
-struct OverlayView: View {
-    let baseImage: UIImage
-    let overlayImage: UIImage
-    @State private var opacity: CGFloat = 0.5
-
-    var body: some View {
-        VStack {
-            ZStack {
-                Image(uiImage: baseImage)
-                    .resizable()
-                    .scaledToFit()
-
-                Image(uiImage: overlayImage)
-                    .resizable()
-                    .scaledToFit()
-                    .opacity(opacity)
-            }
-            .cornerRadius(10)
-
-            Slider(value: $opacity, in: 0...1) {
-                Text("透明度")
-            }
-            .padding()
-        }
-        .padding()
-    }
-}
-
-// MARK: - 差异显示视图
-struct DifferenceView: View {
-    let leftImage: UIImage
-    let rightImage: UIImage
-    let differences: [DifferencePoint]
-
-    var body: some View {
-        VStack {
-            Text("差异检测结果")
-                .font(.headline)
-                .padding()
-
-            if differences.isEmpty {
-                VStack(spacing: 16) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(.green)
-                    Text("未发现明显差异")
-                        .font(.title3)
-                }
-            } else {
-                VStack(spacing: 12) {
-                    ForEach(differences.prefix(10)) { diff in
-                        HStack {
-                            Circle()
-                                .fill(diff.intensity > 0.7 ? .red : .orange)
-                                .frame(width: 12, height: 12)
-
-                            VStack(alignment: .leading) {
-                                Text("差异点 \(differences.firstIndex(where: { $0.id == diff.id })! + 1)")
-                                    .font(.subheadline)
-                                Text("强度: \(Int(diff.intensity * 100))%")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            Spacer()
+                    Menu {
+                        Button {
+                            resetAllLayers()
+                        } label: {
+                            Label("重置所有图层", systemImage: "arrow.counterclockwise")
                         }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
 
-                    if differences.count > 10 {
-                        Text("还有 \(differences.count - 10) 个差异点...")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        Button {
+                            // TODO: 导出功能
+                        } label: {
+                            Label("导出图片", systemImage: "square.and.arrow.up")
+                        }
+                        .disabled(true)
+
+                        Button {
+                            // TODO: 分享功能
+                        } label: {
+                            Label("分享", systemImage: "square.and.arrow.up")
+                        }
+                        .disabled(true)
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }
+            .onAppear {
+                setupLayers()
+            }
         }
-        .padding()
+    }
+
+    // MARK: - 辅助方法
+    private func setupLayers() {
+        layers = [
+            Layer(
+                name: "底层（原图）",
+                image: leftImage,
+                position: .zero,
+                scale: 1.0,
+                opacity: 1.0,
+                isVisible: true
+            ),
+            Layer(
+                name: "顶层（对比图）",
+                image: rightImage,
+                position: .zero,
+                scale: 1.0,
+                opacity: 0.5,
+                isVisible: true
+            )
+        ]
+        selectedLayerId = layers.first?.id
+    }
+
+    private func resetAllLayers() {
+        withAnimation {
+            layers = layers.map { layer in
+                Layer(
+                    name: layer.name,
+                    image: layer.image,
+                    position: .zero,
+                    scale: 1.0,
+                    opacity: layer.name.contains("顶层") ? 0.5 : 1.0,
+                    isVisible: true
+                )
+            }
+        }
+    }
+
+    // 为特定图层创建绑定
+    private func binding(for id: UUID, keyPath: WritableKeyPath<Layer, CGSize>) -> Binding<CGSize> {
+        Binding(
+            get: {
+                guard let index = layers.firstIndex(where: { $0.id == id }) else {
+                    return .zero
+                }
+                return layers[index][keyPath: keyPath]
+            },
+            set: { newValue in
+                guard let index = layers.firstIndex(where: { $0.id == id }) else {
+                    return
+                }
+                layers[index][keyPath: keyPath] = newValue
+            }
+        )
+    }
+
+    private func binding(for id: UUID, keyPath: WritableKeyPath<Layer, CGFloat>) -> Binding<CGFloat> {
+        Binding(
+            get: {
+                guard let index = layers.firstIndex(where: { $0.id == id }) else {
+                    return 1.0
+                }
+                return layers[index][keyPath: keyPath]
+            },
+            set: { newValue in
+                guard let index = layers.firstIndex(where: { $0.id == id }) else {
+                    return
+                }
+                layers[index][keyPath: keyPath] = newValue
+            }
+        )
+    }
+
+    private func binding(for id: UUID, keyPath: WritableKeyPath<Layer, Double>) -> Binding<Double> {
+        Binding(
+            get: {
+                guard let index = layers.firstIndex(where: { $0.id == id }) else {
+                    return 1.0
+                }
+                return layers[index][keyPath: keyPath]
+            },
+            set: { newValue in
+                guard let index = layers.firstIndex(where: { $0.id == id }) else {
+                    return
+                }
+                layers[index][keyPath: keyPath] = newValue
+            }
+        )
     }
 }
 
-// MARK: - 差异标注覆盖层
-struct DifferenceOverlay: View {
-    let differences: [DifferencePoint]
+// MARK: - 棋盘格背景
+struct CheckerboardPattern: View {
+    let tileSize: CGFloat = 20
 
     var body: some View {
         GeometryReader { geometry in
-            ForEach(differences) { diff in
-                Circle()
-                    .stroke(
-                        diff.intensity > 0.7 ? Color.red : Color.orange,
-                        lineWidth: 3
-                    )
-                    .frame(
-                        width: diff.size,
-                        height: diff.size
-                    )
-                    .position(
-                        x: diff.location.x * geometry.size.width,
-                        y: diff.location.y * geometry.size.height
-                    )
+            ZStack {
+                // 浅色背景
+                Color(.systemGray5)
+
+                // 深色方块
+                Path { path in
+                    let width = geometry.size.width
+                    let height = geometry.size.height
+
+                    for row in stride(from: 0, to: height, by: tileSize * 2) {
+                        for col in stride(from: 0, to: width, by: tileSize * 2) {
+                            // 第一个方块
+                            path.addRect(CGRect(
+                                x: col,
+                                y: row,
+                                width: tileSize,
+                                height: tileSize
+                            ))
+
+                            // 对角线方块
+                            path.addRect(CGRect(
+                                x: col + tileSize,
+                                y: row + tileSize,
+                                width: tileSize,
+                                height: tileSize
+                            ))
+                        }
+                    }
+                }
+                .fill(Color(.systemGray6))
             }
         }
     }
@@ -295,7 +254,7 @@ struct DifferenceOverlay: View {
 
 #Preview {
     ComparisonView(
-        leftImage: UIImage(systemName: "photo")!,
-        rightImage: UIImage(systemName: "photo.fill")!
+        leftImage: UIImage(systemName: "photo.fill")!,
+        rightImage: UIImage(systemName: "photo")!
     )
 }
