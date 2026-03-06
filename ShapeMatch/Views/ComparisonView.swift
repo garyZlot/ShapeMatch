@@ -81,20 +81,40 @@ struct ComparisonView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Label("返回", systemImage: "xmark")
+                    HStack(spacing: 12) {
+                        Button {
+                            swapLayers()
+                        } label: {
+                            Label("交换图层", systemImage: "arrow.up.arrow.down")
+                        }
+                        .disabled(layers.count < 2)
+
+                        Button {
+                            dismiss()
+                        } label: {
+                            Label("返回", systemImage: "xmark")
+                        }
                     }
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button {
+                            swapLayers()
+                        } label: {
+                            Label("交换图层位置", systemImage: "arrow.up.arrow.down")
+                        }
+                        .disabled(layers.count < 2)
+
+                        Divider()
+
+                        Button {
                             resetAllLayers()
                         } label: {
                             Label("重置所有图层", systemImage: "arrow.counterclockwise")
                         }
+
+                        Divider()
 
                         Button {
                             // TODO: 导出功能
@@ -154,6 +174,42 @@ struct ComparisonView: View {
                     opacity: layer.name.contains("顶层") ? 0.5 : 1.0,
                     isVisible: true
                 )
+            }
+        }
+    }
+
+    private func swapLayers() {
+        guard layers.count >= 2 else { return }
+
+        withAnimation(.easeInOut(duration: 0.3)) {
+            // 保存图层属性
+            let layer0 = layers[0]
+            let layer1 = layers[1]
+
+            // 交换图层（保持各自的属性）
+            layers[0] = Layer(
+                name: layer1.name,
+                image: layer1.image,
+                position: layer1.position,
+                scale: layer1.scale,
+                opacity: layer1.opacity,
+                isVisible: layer1.isVisible
+            )
+
+            layers[1] = Layer(
+                name: layer0.name,
+                image: layer0.image,
+                position: layer0.position,
+                scale: layer0.scale,
+                opacity: layer0.opacity,
+                isVisible: layer0.isVisible
+            )
+
+            // 保持当前选中状态
+            if selectedLayerId == layer0.id {
+                selectedLayerId = layers[0].id
+            } else if selectedLayerId == layer1.id {
+                selectedLayerId = layers[1].id
             }
         }
     }
