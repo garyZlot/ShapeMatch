@@ -16,6 +16,7 @@ struct DraggableImageView: View {
     let onTap: () -> Void
 
     @State private var lastScale: CGFloat = 1.0
+    @State private var dragOffset: CGSize = .zero
 
     var body: some View {
         Image(uiImage: image)
@@ -24,7 +25,10 @@ struct DraggableImageView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .opacity(opacity)
             .scaleEffect(scale)
-            .offset(position)
+            .offset(
+                x: position.width + dragOffset.width,
+                y: position.height + dragOffset.height
+            )
             .overlay(
                 // 选中边框
                 RoundedRectangle(cornerRadius: 8)
@@ -55,10 +59,15 @@ struct DraggableImageView: View {
                 // 拖拽手势
                 DragGesture()
                     .onChanged { value in
+                        dragOffset = value.translation
+                    }
+                    .onEnded { value in
+                        // 更新最终位置
                         position = CGSize(
-                            width: value.translation.width + position.width,
-                            height: value.translation.height + position.height
+                            width: position.width + value.translation.width,
+                            height: position.height + value.translation.height
                         )
+                        dragOffset = .zero
                     }
             )
             .gesture(
