@@ -52,6 +52,19 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 16)
 
+                // 使用示例图片按钮
+                Button {
+                    loadSampleImages()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "photo.stack")
+                        Text("使用示例图片")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.blue)
+                }
+                .buttonStyle(.borderless)
+
                 // 对比按钮
                 Button {
                     isComparing = true
@@ -102,6 +115,14 @@ struct HomeView: View {
                     rightImage: right
                 )
             }
+        }
+    }
+
+    // MARK: - 辅助方法
+    private func loadSampleImages() {
+        if let img1 = UIImage(named: "pindou1"), let img2 = UIImage(named: "pindou2") {
+            leftImage = img1
+            rightImage = img2
         }
     }
 }

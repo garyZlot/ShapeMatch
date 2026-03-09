@@ -16,6 +16,8 @@ struct ComparisonView: View {
     @State private var layers: [Layer] = []
     @State private var selectedLayerId: UUID?
     @State private var showLayerPanel = true
+    @State private var showFineTunePanel = false
+    @State private var fineTunePanelPosition = CGPoint(x: 0, y: 0)
 
     init(leftImage: UIImage, rightImage: UIImage) {
         self.leftImage = leftImage
@@ -44,6 +46,7 @@ struct ComparisonView: View {
                                         position: binding(for: layer.id, keyPath: \.position),
                                         scale: binding(for: layer.id, keyPath: \.scale),
                                         opacity: binding(for: layer.id, keyPath: \.opacity),
+                                        rotation: binding(for: layer.id, keyPath: \.rotation),
                                         isSelected: selectedLayerId == layer.id,
                                         isLocked: layer.isLocked,
                                         onTap: {
@@ -62,8 +65,11 @@ struct ComparisonView: View {
                             height: geometry.size.height * 1.5
                         )
                         .onTapGesture {
-                            // 点击空白处取消选择
+                            // 点击空白处取消选择并关闭微调面板
                             selectedLayerId = nil
+                            withAnimation {
+                                showFineTunePanel = false
+                            }
                         }
                     }
                 }
@@ -83,6 +89,21 @@ struct ComparisonView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     HStack(spacing: 12) {
+                        // 微调面板切换按钮
+                        Button {
+                            withAnimation {
+                                if showFineTunePanel {
+                                    showFineTunePanel = false
+                                } else if selectedLayerId != nil {
+                                    showFineTunePanel = true
+                                }
+                            }
+                        } label: {
+                            Label("微调", systemImage: "slider.horizontal.3")
+                        }
+                        .tint(showFineTunePanel ? .blue : .secondary)
+                        .disabled(selectedLayerId == nil)
+
                         Button {
                             swapLayers()
                         } label: {
@@ -139,6 +160,39 @@ struct ComparisonView: View {
                 setupLayers()
             }
         }
+        .overlay(alignment: .topLeading) {
+            // 浮动微调面板 - 在根视图层级
+            if showFineTunePanel, let selectedId = selectedLayerId,
+               let index = layers.firstIndex(where: { $0.id == selectedId }) {
+                FineTunePanel(
+                    position: binding(for: selectedId, keyPath: \.position),
+                    scale: binding(for: selectedId, keyPath: \.scale),
+                    rotation: binding(for: selectedId, keyPath: \.rotation),
+                    panelPosition: $fineTunePanelPosition,
+                    onReset: {
+                        layers[index].position = .zero
+                        layers[index].scale = 1.0
+                        layers[index].rotation = 0.0
+                    },
+                    onClose: {
+                        withAnimation {
+                            showFineTunePanel = false
+                        }
+                    }
+                )
+                .transition(.scale.combined(with: .opacity))
+                .zIndex(1000)
+            }
+        }
+    }
+
+    // 获取屏幕尺寸的辅助方法
+    private var screenWidth: CGFloat {
+        #if os(iOS)
+        return UIScreen.main.bounds.width
+        #else
+        return 400  // macOS 默认值
+        #endif
     }
 
     // MARK: - 辅助方法
@@ -151,7 +205,8 @@ struct ComparisonView: View {
                 scale: 1.0,
                 opacity: 1.0,
                 isVisible: true,
-                isLocked: false
+                isLocked: false,
+                rotation: 0.0
             ),
             Layer(
                 name: "顶层（对比图）",
@@ -160,10 +215,14 @@ struct ComparisonView: View {
                 scale: 1.0,
                 opacity: 0.5,
                 isVisible: true,
-                isLocked: false
+                isLocked: false,
+                rotation: 0.0
             )
         ]
         selectedLayerId = layers.first?.id
+
+        // 设置微调面板的初始位置（右侧中部）
+        fineTunePanelPosition = CGPoint(x: screenWidth - 100, y: 200)
     }
 
     private func resetAllLayers() {
@@ -176,7 +235,8 @@ struct ComparisonView: View {
                     scale: 1.0,
                     opacity: layer.name.contains("顶层") ? 0.5 : 1.0,
                     isVisible: true,
-                    isLocked: false
+                    isLocked: false,
+                    rotation: 0.0
                 )
             }
         }
@@ -198,7 +258,8 @@ struct ComparisonView: View {
                 scale: layer1.scale,
                 opacity: layer1.opacity,
                 isVisible: layer1.isVisible,
-                isLocked: layer1.isLocked
+                isLocked: layer1.isLocked,
+                rotation: layer1.rotation
             )
 
             layers[1] = Layer(
@@ -208,7 +269,8 @@ struct ComparisonView: View {
                 scale: layer0.scale,
                 opacity: layer0.opacity,
                 isVisible: layer0.isVisible,
-                isLocked: layer0.isLocked
+                isLocked: layer0.isLocked,
+                rotation: layer0.rotation
             )
 
             // 保持当前选中状态

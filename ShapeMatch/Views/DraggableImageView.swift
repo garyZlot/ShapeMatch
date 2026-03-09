@@ -12,6 +12,7 @@ struct DraggableImageView: View {
     @Binding var position: CGSize
     @Binding var scale: CGFloat
     @Binding var opacity: Double
+    @Binding var rotation: Double
     let isSelected: Bool
     let isLocked: Bool
     let onTap: () -> Void
@@ -25,6 +26,7 @@ struct DraggableImageView: View {
             .scaledToFit()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .opacity(opacity)
+            .rotationEffect(.degrees(rotation))
             .scaleEffect(scale)
             .offset(
                 x: position.width + dragOffset.width,
@@ -108,6 +110,7 @@ struct DraggableImageView: View {
         position: .constant(.zero),
         scale: .constant(1.0),
         opacity: .constant(1.0),
+        rotation: .constant(0.0),
         isSelected: true,
         isLocked: false,
         onTap: {}
