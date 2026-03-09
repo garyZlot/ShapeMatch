@@ -15,6 +15,7 @@ struct Layer: Identifiable {
     var scale: CGFloat
     var opacity: Double
     var isVisible: Bool
+    var isLocked: Bool
 
     init(
         name: String,
@@ -22,7 +23,8 @@ struct Layer: Identifiable {
         position: CGSize = .zero,
         scale: CGFloat = 1.0,
         opacity: Double = 1.0,
-        isVisible: Bool = true
+        isVisible: Bool = true,
+        isLocked: Bool = false
     ) {
         self.name = name
         self.image = image
@@ -30,5 +32,6 @@ struct Layer: Identifiable {
         self.scale = scale
         self.opacity = opacity
         self.isVisible = isVisible
+        self.isLocked = isLocked
     }
 }

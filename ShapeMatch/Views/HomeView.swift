@@ -19,75 +19,78 @@ struct HomeView: View {
 
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // 标题区域
-                    VStack(spacing: 8) {
-                        Image(systemName: "eye.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.blue)
+            VStack(spacing: 16) {
+                // 标题区域
+                VStack(spacing: 4) {
+                    Image(systemName: "eye.circle.fill")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.blue)
 
-                        Text("图片对比")
-                            .font(.title)
-                            .fontWeight(.bold)
+                    Text("图片对比")
+                        .font(.headline)
+                        .fontWeight(.bold)
 
-                        Text("选择两张图片，快速找出差异")
+                    Text("选择两张图片，快速找出差异")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, 12)
+
+                // 图片选择区域 - 横向排列
+                HStack(spacing: 12) {
+                    ImagePickerView(
+                        selectedImage: $leftImage,
+                        sourceType: .left,
+                        title: "左图"
+                    )
+
+                    ImagePickerView(
+                        selectedImage: $rightImage,
+                        sourceType: .right,
+                        title: "右图"
+                    )
+                }
+                .padding(.horizontal, 16)
+
+                // 对比按钮
+                Button {
+                    isComparing = true
+                    // 延迟一点显示结果页面
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isComparing = false
+                        showComparison = true
+                    }
+                } label: {
+                    if isComparing {
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.8)
+                            Text("对比中...")
+                                .font(.subheadline)
+                        }
+                        .frame(maxWidth: .infinity)
+                    } else {
+                        Label("开始对比", systemImage: "magnifyingglass")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 20)
-
-                    // 图片选择区域
-                    VStack(spacing: 20) {
-                        ImagePickerView(
-                            selectedImage: $leftImage,
-                            sourceType: .left,
-                            title: "左图"
-                        )
-
-                        ImagePickerView(
-                            selectedImage: $rightImage,
-                            sourceType: .right,
-                            title: "右图"
-                        )
-                    }
-                    .padding(.horizontal)
-
-                    // 对比按钮
-                    Button {
-                        isComparing = true
-                        // 延迟一点显示结果页面
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            isComparing = false
-                            showComparison = true
-                        }
-                    } label: {
-                        if isComparing {
-                            HStack {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                Text("对比中...")
-                            }
                             .frame(maxWidth: .infinity)
-                        } else {
-                            Label("开始对比", systemImage: "magnifyingglass")
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .buttonBorderShape(.capsule)
-                    .controlSize(.large)
-                    .disabled(!canCompare || isComparing)
-                    .padding(.horizontal, 40)
-                    .padding(.bottom, 20)
-
-                    // 提示信息
-                    if !canCompare {
-                        Text("请选择两张图片后开始对比")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
                     }
                 }
+                .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.capsule)
+                .controlSize(.regular)
+                .disabled(!canCompare || isComparing)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 8)
+
+                // 提示信息
+                if !canCompare {
+                    Text("请选择两张图片后开始对比")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
             }
             .navigationTitle("ShapeMatch")
             .navigationBarTitleDisplayMode(.inline)

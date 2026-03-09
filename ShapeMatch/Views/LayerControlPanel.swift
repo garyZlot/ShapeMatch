@@ -51,6 +51,9 @@ struct LayerControlPanel: View {
                             },
                             onOpacityChange: { newOpacity in
                                 layers[index].opacity = newOpacity
+                            },
+                            onLockToggle: {
+                                layers[index].isLocked.toggle()
                             }
                         )
 
@@ -113,6 +116,7 @@ struct LayerRow: View {
     let onTap: () -> Void
     let onVisibilityToggle: () -> Void
     let onOpacityChange: (Double) -> Void
+    let onLockToggle: () -> Void
 
     @State private var isEditingOpacity = false
 
@@ -180,6 +184,15 @@ struct LayerRow: View {
             } label: {
                 Image(systemName: layer.isVisible ? "eye.fill" : "eye.slash.fill")
                     .foregroundColor(layer.isVisible ? .blue : .secondary)
+            }
+            .buttonStyle(.borderless)
+
+            // 锁定按钮
+            Button {
+                onLockToggle()
+            } label: {
+                Image(systemName: layer.isLocked ? "lock.fill" : "lock.open.fill")
+                    .foregroundColor(layer.isLocked ? .orange : .secondary)
             }
             .buttonStyle(.borderless)
 

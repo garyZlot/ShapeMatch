@@ -13,6 +13,7 @@ struct DraggableImageView: View {
     @Binding var scale: CGFloat
     @Binding var opacity: Double
     let isSelected: Bool
+    let isLocked: Bool
     let onTap: () -> Void
 
     @State private var lastScale: CGFloat = 1.0
@@ -32,17 +33,29 @@ struct DraggableImageView: View {
             .overlay(
                 // 选中边框
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? (isLocked ? Color.orange : Color.blue) : Color.clear, lineWidth: 2)
             )
             .overlay(
-                // 选中时显示调整手柄
+                // 选中时显示的指示器
                 Group {
                     if isSelected {
                         VStack {
                             HStack {
+                                // 锁定图标
+                                if isLocked {
+                                    Image(systemName: "lock.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(.orange)
+                                        .padding(6)
+                                        .background(Circle()
+                                            .fill(.ultraThinMaterial)
+                                            .shadow(radius: 2))
+                                }
+
                                 Spacer()
+
                                 Circle()
-                                    .fill(Color.blue)
+                                    .fill(isLocked ? Color.orange : Color.blue)
                                     .frame(width: 20, height: 20)
                                     .overlay(
                                         Image(systemName: "plus.magnifyingglass")
@@ -56,8 +69,8 @@ struct DraggableImageView: View {
                 }
             )
             .gesture(
-                // 拖拽手势
-                DragGesture()
+                // 拖拽手势 - 锁定时禁用
+                isLocked ? nil : DragGesture()
                     .onChanged { value in
                         dragOffset = value.translation
                     }
@@ -71,8 +84,8 @@ struct DraggableImageView: View {
                     }
             )
             .gesture(
-                // 缩放手势
-                MagnificationGesture()
+                // 缩放手势 - 锁定时禁用
+                isLocked ? nil : MagnificationGesture()
                     .onChanged { value in
                         let delta = value / lastScale
                         lastScale = value
@@ -96,6 +109,7 @@ struct DraggableImageView: View {
         scale: .constant(1.0),
         opacity: .constant(1.0),
         isSelected: true,
+        isLocked: false,
         onTap: {}
     )
     .frame(width: 300, height: 300)

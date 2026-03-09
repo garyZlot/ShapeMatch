@@ -22,7 +22,7 @@ struct ImagePickerView: View {
     @State private var showingImagePicker = false
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             // 图片预览区
             ZStack {
                 if let image = selectedImage {
@@ -31,38 +31,40 @@ struct ImagePickerView: View {
                         .scaledToFit()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 4) {
                         Image(systemName: "photo.badge.plus")
-                            .font(.system(size: 40))
+                            .font(.system(size: 28))
                             .foregroundStyle(.secondary)
 
-                        Text(sourceType == .left ? "选择左图" : "选择右图")
-                            .font(.headline)
+                        Text(sourceType == .left ? "左图" : "右图")
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
 
-                        Text("从相册或拍照")
-                            .font(.caption)
+                        Text("选择图片")
+                            .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
                 }
             }
-            .frame(height: 200)
+            .frame(width: 80, height: 140)
             .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 10)
                     .stroke(Color(.systemGray4), lineWidth: 1)
             )
 
             // 选择按钮
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 // 相册按钮
                 PhotosPicker(selection: $pickerItem, matching: .images) {
                     Label("相册", systemImage: "photo.on.rectangle")
+                        .font(.caption)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.blue)
+                .controlSize(.small)
                 .onChange(of: pickerItem) { oldValue, newValue in
                     Task {
                         if let data = try? await newValue?.loadTransferable(type: Data.self),
@@ -77,9 +79,11 @@ struct ImagePickerView: View {
                     showingImagePicker = true
                 } label: {
                     Label("拍照", systemImage: "camera")
+                        .font(.caption)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
+                .controlSize(.small)
                 .disabled(true) // 暂时禁用，后续可添加相机支持
             }
 
@@ -89,6 +93,7 @@ struct ImagePickerView: View {
                     selectedImage = nil
                 } label: {
                     Label("清除", systemImage: "xmark.circle.fill")
+                        .font(.caption)
                         .foregroundStyle(.red)
                 }
                 .buttonStyle(.borderless)

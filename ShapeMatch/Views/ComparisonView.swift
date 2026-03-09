@@ -45,6 +45,7 @@ struct ComparisonView: View {
                                         scale: binding(for: layer.id, keyPath: \.scale),
                                         opacity: binding(for: layer.id, keyPath: \.opacity),
                                         isSelected: selectedLayerId == layer.id,
+                                        isLocked: layer.isLocked,
                                         onTap: {
                                             selectedLayerId = layer.id
                                         }
@@ -149,7 +150,8 @@ struct ComparisonView: View {
                 position: .zero,
                 scale: 1.0,
                 opacity: 1.0,
-                isVisible: true
+                isVisible: true,
+                isLocked: false
             ),
             Layer(
                 name: "顶层（对比图）",
@@ -157,7 +159,8 @@ struct ComparisonView: View {
                 position: .zero,
                 scale: 1.0,
                 opacity: 0.5,
-                isVisible: true
+                isVisible: true,
+                isLocked: false
             )
         ]
         selectedLayerId = layers.first?.id
@@ -172,7 +175,8 @@ struct ComparisonView: View {
                     position: .zero,
                     scale: 1.0,
                     opacity: layer.name.contains("顶层") ? 0.5 : 1.0,
-                    isVisible: true
+                    isVisible: true,
+                    isLocked: false
                 )
             }
         }
@@ -193,7 +197,8 @@ struct ComparisonView: View {
                 position: layer1.position,
                 scale: layer1.scale,
                 opacity: layer1.opacity,
-                isVisible: layer1.isVisible
+                isVisible: layer1.isVisible,
+                isLocked: layer1.isLocked
             )
 
             layers[1] = Layer(
@@ -202,7 +207,8 @@ struct ComparisonView: View {
                 position: layer0.position,
                 scale: layer0.scale,
                 opacity: layer0.opacity,
-                isVisible: layer0.isVisible
+                isVisible: layer0.isVisible,
+                isLocked: layer0.isLocked
             )
 
             // 保持当前选中状态
