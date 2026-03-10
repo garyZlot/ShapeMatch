@@ -6,6 +6,20 @@
 //
 
 import SwiftUI
+import UIKit
+
+// 对比模式枚举
+enum ComparisonMode: String, CaseIterable {
+    case overlay = "叠加"
+    case sideBySide = "分屏"
+
+    var icon: String {
+        switch self {
+        case .overlay: return "square.stack.3d.up"
+        case .sideBySide: return "square.split.2x1"
+        }
+    }
+}
 
 struct ComparisonView: View {
     let leftImage: UIImage
@@ -18,6 +32,8 @@ struct ComparisonView: View {
     @State private var showLayerPanel = true
     @State private var showFineTunePanel = false
     @State private var fineTunePanelPosition = CGPoint(x: 0, y: 0)
+    @State private var comparisonMode: ComparisonMode = .overlay
+    @State private var splitPosition: CGFloat = 0.5 // 分屏分割位置 (0.0 - 1.0)
 
     init(leftImage: UIImage, rightImage: UIImage) {
         self.leftImage = leftImage
@@ -33,43 +49,13 @@ struct ComparisonView: View {
             ZStack(alignment: .bottom) {
                 // 主画布区域
                 GeometryReader { geometry in
-                    ScrollView([.horizontal, .vertical]) {
-                        ZStack {
-                            // 棋盘格背景（表示透明）
-                            CheckerboardPattern()
-
-                            // 图层叠加
-                            ForEach(Array(layers.enumerated()), id: \.element.id) { index, layer in
-                                if layer.isVisible {
-                                    DraggableImageView(
-                                        image: layer.image,
-                                        position: binding(for: layer.id, keyPath: \.position),
-                                        scale: binding(for: layer.id, keyPath: \.scale),
-                                        opacity: binding(for: layer.id, keyPath: \.opacity),
-                                        rotation: binding(for: layer.id, keyPath: \.rotation),
-                                        isSelected: selectedLayerId == layer.id,
-                                        isLocked: layer.isLocked,
-                                        onTap: {
-                                            selectedLayerId = layer.id
-                                        }
-                                    )
-                                    .frame(
-                                        width: geometry.size.width,
-                                        height: geometry.size.height
-                                    )
-                                }
-                            }
-                        }
-                        .frame(
-                            width: geometry.size.width * 1.5,
-                            height: geometry.size.height * 1.5
-                        )
-                        .onTapGesture {
-                            // 点击空白处取消选择并关闭微调面板
-                            selectedLayerId = nil
-                            withAnimation {
-                                showFineTunePanel = false
-                            }
+                    Group {
+                        if comparisonMode == .overlay {
+                            // 叠加模式
+                            overlayModeView(geometry: geometry)
+                        } else {
+                            // 分屏模式
+                            sideBySideModeView(geometry: geometry)
                         }
                     }
                 }
@@ -89,6 +75,15 @@ struct ComparisonView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     HStack(spacing: 12) {
+                        // 对比模式切换
+                        Picker("对比模式", selection: $comparisonMode) {
+                            ForEach(ComparisonMode.allCases, id: \.self) { mode in
+                                Label(mode.rawValue, systemImage: mode.icon)
+                                    .tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+
                         // 微调面板切换按钮
                         Button {
                             withAnimation {
@@ -102,7 +97,7 @@ struct ComparisonView: View {
                             Label("微调", systemImage: "slider.horizontal.3")
                         }
                         .tint(showFineTunePanel ? .blue : .secondary)
-                        .disabled(selectedLayerId == nil)
+                        .disabled(selectedLayerId == nil || comparisonMode == .sideBySide)
 
                         Button {
                             swapLayers()
@@ -332,6 +327,120 @@ struct ComparisonView: View {
                 layers[index][keyPath: keyPath] = newValue
             }
         )
+    }
+
+    // MARK: - 对比模式视图
+    private func overlayModeView(geometry: GeometryProxy) -> some View {
+        ScrollView([.horizontal, .vertical]) {
+            ZStack {
+                // 棋盘格背景（表示透明）
+                CheckerboardPattern()
+
+                // 图层叠加
+                ForEach(Array(layers.enumerated()), id: \.element.id) { index, layer in
+                    if layer.isVisible {
+                        DraggableImageView(
+                            image: layer.image,
+                            position: binding(for: layer.id, keyPath: \.position),
+                            scale: binding(for: layer.id, keyPath: \.scale),
+                            opacity: binding(for: layer.id, keyPath: \.opacity),
+                            rotation: binding(for: layer.id, keyPath: \.rotation),
+                            isSelected: selectedLayerId == layer.id,
+                            isLocked: layer.isLocked,
+                            onTap: {
+                                selectedLayerId = layer.id
+                            }
+                        )
+                        .frame(
+                            width: geometry.size.width,
+                            height: geometry.size.height
+                        )
+                    }
+                }
+            }
+            .frame(
+                width: geometry.size.width * 1.5,
+                height: geometry.size.height * 1.5
+            )
+            .onTapGesture {
+                selectedLayerId = nil
+                withAnimation {
+                    showFineTunePanel = false
+                }
+            }
+        }
+    }
+
+    private func sideBySideModeView(geometry: GeometryProxy) -> some View {
+        ZStack(alignment: .leading) {
+            // 左侧：底层图片
+            let leftLayer = layers.first
+            Image(uiImage: leftLayer?.image ?? leftImage)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+
+            // 右侧：顶层图片
+            let rightLayer = layers.count > 1 ? layers[1] : nil
+            GeometryReader { geo in
+                Image(uiImage: rightLayer?.image ?? rightImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+                    .frame(width: geo.size.width)
+                    .offset(x: geo.size.width * splitPosition)
+            }
+
+            // 分割线
+            Divider()
+                .frame(height: 60)
+                .background(Color(.systemBackground))
+                .overlay(
+                    Circle()
+                        .fill(Color(.systemBackground))
+                        .frame(width: 50, height: 50)
+                        .overlay(
+                            Image(systemName: "line.3.horizontal")
+                                .font(.system(size: 14))
+                                .foregroundColor(.blue)
+                        )
+                )
+                .offset(x: geometry.size.width * splitPosition - 30)
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            let newPosition = value.location.x / geometry.size.width
+                            splitPosition = max(0.1, min(newPosition, 0.9))
+                        }
+                )
+
+            // 左右标签
+            VStack {
+                HStack {
+                    Text(layers.first?.name ?? "底层")
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(.systemBackground))
+                        .clipShape(Capsule())
+                        .shadow(radius: 2)
+
+                    Spacer()
+
+                    Text(layers.count > 1 ? layers[1].name : "顶层")
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(.systemBackground))
+                        .clipShape(Capsule())
+                        .shadow(radius: 2)
+                }
+                .padding()
+                Spacer()
+            }
+        }
     }
 }
 
