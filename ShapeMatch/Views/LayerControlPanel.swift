@@ -11,6 +11,8 @@ struct LayerControlPanel: View {
     @Binding var layers: [Layer]
     @Binding var selectedLayerId: UUID?
     @Binding var showPanel: Bool
+    let onSwapLayers: () -> Void
+    let onResetAll: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -22,13 +24,40 @@ struct LayerControlPanel: View {
 
                 Spacer()
 
-                Button {
-                    withAnimation {
-                        showPanel = false
+                // 快捷操作按钮组
+                HStack(spacing: 8) {
+                    // 交换图层按钮
+                    Button {
+                        onSwapLayers()
+                    } label: {
+                        Label("交换", systemImage: "arrow.up.arrow.down")
+                            .font(.caption)
+                            .foregroundColor(.white)
                     }
-                } label: {
-                    Image(systemName: "chevron.down")
-                        .foregroundColor(.white)
+                    .buttonStyle(.borderless)
+                    .disabled(layers.count < 2)
+
+                    // 重置全部按钮
+                    Button {
+                        onResetAll()
+                    } label: {
+                        Label("重置", systemImage: "arrow.counterclockwise")
+                            .font(.caption)
+                            .foregroundColor(.white)
+                    }
+                    .buttonStyle(.borderless)
+
+                    // 最小化按钮
+                    Button {
+                        withAnimation {
+                            showPanel = false
+                        }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.caption)
+                            .foregroundColor(.white)
+                    }
+                    .buttonStyle(.borderless)
                 }
             }
             .padding()
@@ -231,7 +260,9 @@ struct LayerRow: View {
                 Layer(name: "对比图", image: UIImage(systemName: "photo")!)
             ]),
             selectedLayerId: .constant(UUID()),
-            showPanel: .constant(true)
+            showPanel: .constant(true),
+            onSwapLayers: {},
+            onResetAll: {}
         )
     }
 }

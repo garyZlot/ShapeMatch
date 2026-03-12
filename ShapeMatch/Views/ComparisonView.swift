@@ -68,7 +68,13 @@ struct ComparisonView: View {
                     LayerControlPanel(
                         layers: $layers,
                         selectedLayerId: $selectedLayerId,
-                        showPanel: $showLayerPanel
+                        showPanel: $showLayerPanel,
+                        onSwapLayers: {
+                            swapLayers()
+                        },
+                        onResetAll: {
+                            resetAllLayers()
+                        }
                     )
                 }
             }
@@ -102,54 +108,10 @@ struct ComparisonView: View {
                         .disabled(selectedLayerId == nil || comparisonMode == .sideBySide)
 
                         Button {
-                            swapLayers()
-                        } label: {
-                            Label("交换图层", systemImage: "arrow.up.arrow.down")
-                        }
-                        .disabled(layers.count < 2)
-
-                        Button {
                             dismiss()
                         } label: {
                             Label("返回", systemImage: "xmark")
                         }
-                    }
-                }
-
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button {
-                            swapLayers()
-                        } label: {
-                            Label("交换图层位置", systemImage: "arrow.up.arrow.down")
-                        }
-                        .disabled(layers.count < 2)
-
-                        Divider()
-
-                        Button {
-                            resetAllLayers()
-                        } label: {
-                            Label("重置所有图层", systemImage: "arrow.counterclockwise")
-                        }
-
-                        Divider()
-
-                        Button {
-                            // TODO: 导出功能
-                        } label: {
-                            Label("导出图片", systemImage: "square.and.arrow.up")
-                        }
-                        .disabled(true)
-
-                        Button {
-                            // TODO: 分享功能
-                        } label: {
-                            Label("分享", systemImage: "square.and.arrow.up")
-                        }
-                        .disabled(true)
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }
@@ -162,6 +124,7 @@ struct ComparisonView: View {
             if showFineTunePanel, let selectedId = selectedLayerId,
                let index = layers.firstIndex(where: { $0.id == selectedId }) {
                 FineTunePanel(
+                    layerName: layers[index].name,
                     position: binding(for: selectedId, keyPath: \.position),
                     scale: binding(for: selectedId, keyPath: \.scale),
                     rotation: binding(for: selectedId, keyPath: \.rotation),

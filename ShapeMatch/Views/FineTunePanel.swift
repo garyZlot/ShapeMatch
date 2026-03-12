@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct FineTunePanel: View {
+    let layerName: String
     @Binding var position: CGSize
     @Binding var scale: CGFloat
     @Binding var rotation: Double
@@ -46,16 +47,21 @@ struct FineTunePanel: View {
                 Button {
                     onReset()
                 } label: {
-                    Image(systemName: "arrow.counterclockwise")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.caption)
+                        Text("重置")
+                            .font(.caption2)
+                    }
+                    .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.borderless)
 
-                Text("精细调整")
+                Text(layerName + " 精细调整")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
 
                 Spacer()
 
@@ -225,6 +231,7 @@ struct FineTunePanel: View {
 
 #Preview {
     FineTunePanel(
+        layerName: "顶层（对比图）",
         position: .constant(.zero),
         scale: .constant(1.0),
         rotation: .constant(0.0),
