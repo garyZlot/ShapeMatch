@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Layer: Identifiable {
+struct Layer: Identifiable, Equatable {
     let id = UUID()
     let name: String
     let image: UIImage
@@ -36,5 +36,16 @@ struct Layer: Identifiable {
         self.isVisible = isVisible
         self.isLocked = isLocked
         self.rotation = rotation
+    }
+
+    // Equatable 实现
+    static func == (lhs: Layer, rhs: Layer) -> Bool {
+        return lhs.id == rhs.id &&
+               lhs.position == rhs.position &&
+               lhs.scale == rhs.scale &&
+               lhs.opacity == rhs.opacity &&
+               lhs.isVisible == rhs.isVisible &&
+               lhs.isLocked == rhs.isLocked &&
+               lhs.rotation == rhs.rotation
     }
 }

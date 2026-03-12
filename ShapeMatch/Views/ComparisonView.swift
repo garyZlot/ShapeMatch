@@ -11,8 +11,10 @@ import UIKit
 struct ComparisonView: View {
     let leftImage: UIImage
     let rightImage: UIImage
+    let projectId: UUID?  // 可选的项目 ID（从历史记录加载时使用）
+    let projectName: String?  // 可选的项目名称
+
     @StateObject private var viewModel: ComparisonViewModel
-    @Environment(\.dismiss) private var dismiss
 
     @State private var layers: [Layer] = []
     @State private var selectedLayerId: UUID?
@@ -21,10 +23,25 @@ struct ComparisonView: View {
     @State private var fineTunePanelPosition = CGPoint(x: 0, y: 0)
     @State private var allLayersLockedScale: CGFloat = 1.0 // 所有图层锁定时的整体缩放
     @State private var lastAllLayersLockedScale: CGFloat = 1.0 // 记录上次的缩放值
+    @State private var autoSaveWorkItem: DispatchWorkItem?
 
     init(leftImage: UIImage, rightImage: UIImage) {
         self.leftImage = leftImage
         self.rightImage = rightImage
+        self.projectId = nil
+        self.projectName = nil
+        self._viewModel = StateObject(wrappedValue: ComparisonViewModel(
+            leftImage: leftImage,
+            rightImage: rightImage
+        ))
+    }
+
+    // 用于从历史记录加载的初始化方法
+    init(leftImage: UIImage, rightImage: UIImage, projectId: UUID, projectName: String) {
+        self.leftImage = leftImage
+        self.rightImage = rightImage
+        self.projectId = projectId
+        self.projectName = projectName
         self._viewModel = StateObject(wrappedValue: ComparisonViewModel(
             leftImage: leftImage,
             rightImage: rightImage
@@ -58,15 +75,6 @@ struct ComparisonView: View {
             .navigationTitle("图层对比")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16))
-                    }
-                }
-
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         withAnimation {
@@ -85,7 +93,13 @@ struct ComparisonView: View {
                 }
             }
             .onAppear {
-                setupLayers()
+                loadSavedProject()
+            }
+            .onDisappear {
+                saveProject()
+            }
+            .onChange(of: layers) { oldValue, newValue in
+                scheduleAutoSave()
             }
         }
         .overlay(alignment: .topLeading) {
@@ -129,6 +143,70 @@ struct ComparisonView: View {
     // 检查是否所有可见图层都已锁定
     private var areAllLayersLocked: Bool {
         layers.filter { $0.isVisible }.allSatisfy { $0.isLocked }
+    }
+
+    // MARK: - 项目存储
+
+    /// 加载保存的项目
+    private func loadSavedProject() {
+        // 如果有指定的项目 ID，从历史记录加载
+        if let projectId = projectId {
+            loadProject(id: projectId)
+        } else {
+            // 否则使用默认配置
+            setupLayers()
+        }
+    }
+
+    /// 从项目 ID 加载
+    private func loadProject(id: UUID) {
+        ProjectStorage.shared.loadProject(id: id) { result in
+            switch result {
+            case .success(let projectData):
+                // 恢复图层
+                let restoredLayers = ProjectStorage.shared.restoreLayers(from: projectData)
+                layers = restoredLayers
+                selectedLayerId = layers.first?.id
+
+                print("✅ 已恢复项目: \(projectData.name) (\(projectData.layers.count) 个图层)")
+
+            case .failure(let error):
+                print("❌ 加载项目失败: \(error.localizedDescription)")
+                // 加载失败时使用默认配置
+                setupLayers()
+            }
+        }
+    }
+
+    /// 保存项目
+    private func saveProject() {
+        let id = projectId ?? UUID()
+        let name = projectName ?? "对比项目 \(DateFormatter.shortDate.string(from: Date()))"
+
+        ProjectStorage.shared.saveProject(id: id, name: name, layers: layers) { result in
+            switch result {
+            case .success:
+                print("✅ 项目已自动保存")
+            case .failure(let error):
+                print("❌ 保存项目失败: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// 调度自动保存（延迟2秒）
+    private func scheduleAutoSave() {
+        // 取消之前的保存任务
+        autoSaveWorkItem?.cancel()
+
+        // 创建新的保存任务
+        let workItem = DispatchWorkItem {
+            saveProject()
+        }
+
+        autoSaveWorkItem = workItem
+
+        // 延迟2秒执行
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: workItem)
     }
 
     private func setupLayers() {
