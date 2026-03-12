@@ -8,19 +8,6 @@
 import SwiftUI
 import UIKit
 
-// 对比模式枚举
-enum ComparisonMode: String, CaseIterable {
-    case overlay = "叠加"
-    case sideBySide = "分屏"
-
-    var icon: String {
-        switch self {
-        case .overlay: return "square.stack.3d.up"
-        case .sideBySide: return "square.split.2x1"
-        }
-    }
-}
-
 struct ComparisonView: View {
     let leftImage: UIImage
     let rightImage: UIImage
@@ -32,8 +19,6 @@ struct ComparisonView: View {
     @State private var showLayerPanel = true
     @State private var showFineTunePanel = false
     @State private var fineTunePanelPosition = CGPoint(x: 0, y: 0)
-    @State private var comparisonMode: ComparisonMode = .overlay
-    @State private var splitPosition: CGFloat = 0.5 // 分屏分割位置 (0.0 - 1.0)
     @State private var allLayersLockedScale: CGFloat = 1.0 // 所有图层锁定时的整体缩放
     @State private var lastAllLayersLockedScale: CGFloat = 1.0 // 记录上次的缩放值
 
@@ -51,15 +36,7 @@ struct ComparisonView: View {
             ZStack(alignment: .bottom) {
                 // 主画布区域
                 GeometryReader { geometry in
-                    Group {
-                        if comparisonMode == .overlay {
-                            // 叠加模式
-                            overlayModeView(geometry: geometry)
-                        } else {
-                            // 分屏模式
-                            sideBySideModeView(geometry: geometry)
-                        }
-                    }
+                    overlayModeView(geometry: geometry)
                 }
 
                 // 图层面板
@@ -82,37 +59,29 @@ struct ComparisonView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    HStack(spacing: 12) {
-                        // 对比模式切换
-                        Picker("对比模式", selection: $comparisonMode) {
-                            ForEach(ComparisonMode.allCases, id: \.self) { mode in
-                                Label(mode.rawValue, systemImage: mode.icon)
-                                    .tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-
-                        // 微调面板切换按钮
-                        Button {
-                            withAnimation {
-                                if showFineTunePanel {
-                                    showFineTunePanel = false
-                                } else if selectedLayerId != nil {
-                                    showFineTunePanel = true
-                                }
-                            }
-                        } label: {
-                            Label("微调", systemImage: "slider.horizontal.3")
-                        }
-                        .tint(showFineTunePanel ? .blue : .secondary)
-                        .disabled(selectedLayerId == nil || comparisonMode == .sideBySide)
-
-                        Button {
-                            dismiss()
-                        } label: {
-                            Label("返回", systemImage: "xmark")
-                        }
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16))
                     }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        withAnimation {
+                            if showFineTunePanel {
+                                showFineTunePanel = false
+                            } else if selectedLayerId != nil {
+                                showFineTunePanel = true
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 16))
+                    }
+                    .tint(showFineTunePanel ? .blue : .secondary)
+                    .disabled(selectedLayerId == nil)
                 }
             }
             .onAppear {
@@ -376,78 +345,6 @@ struct ComparisonView: View {
                     }
                 : nil
             )
-        }
-    }
-
-    private func sideBySideModeView(geometry: GeometryProxy) -> some View {
-        ZStack(alignment: .leading) {
-            // 左侧：底层图片
-            let leftLayer = layers.first
-            Image(uiImage: leftLayer?.image ?? leftImage)
-                .resizable()
-                .scaledToFit()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-
-            // 右侧：顶层图片
-            let rightLayer = layers.count > 1 ? layers[1] : nil
-            GeometryReader { geo in
-                Image(uiImage: rightLayer?.image ?? rightImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
-                    .frame(width: geo.size.width)
-                    .offset(x: geo.size.width * splitPosition)
-            }
-
-            // 分割线
-            Divider()
-                .frame(height: 60)
-                .background(Color(.systemBackground))
-                .overlay(
-                    Circle()
-                        .fill(Color(.systemBackground))
-                        .frame(width: 50, height: 50)
-                        .overlay(
-                            Image(systemName: "line.3.horizontal")
-                                .font(.system(size: 14))
-                                .foregroundColor(.blue)
-                        )
-                )
-                .offset(x: geometry.size.width * splitPosition - 30)
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            let newPosition = value.location.x / geometry.size.width
-                            splitPosition = max(0.1, min(newPosition, 0.9))
-                        }
-                )
-
-            // 左右标签
-            VStack {
-                HStack {
-                    Text(layers.first?.name ?? "底层")
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(.systemBackground))
-                        .clipShape(Capsule())
-                        .shadow(radius: 2)
-
-                    Spacer()
-
-                    Text(layers.count > 1 ? layers[1].name : "顶层")
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(.systemBackground))
-                        .clipShape(Capsule())
-                        .shadow(radius: 2)
-                }
-                .padding()
-                Spacer()
-            }
         }
     }
 }

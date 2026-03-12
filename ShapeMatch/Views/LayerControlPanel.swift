@@ -16,124 +16,129 @@ struct LayerControlPanel: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // 面板头部
-            HStack {
-                Text("图层")
-                    .font(.headline)
-                    .foregroundColor(.white)
-
-                Spacer()
-
-                // 快捷操作按钮组
-                HStack(spacing: 8) {
-                    // 交换图层按钮
-                    Button {
-                        onSwapLayers()
-                    } label: {
-                        Label("交换", systemImage: "arrow.up.arrow.down")
-                            .font(.caption)
-                            .foregroundColor(.white)
-                    }
-                    .buttonStyle(.borderless)
-                    .disabled(layers.count < 2)
-
-                    // 重置全部按钮
-                    Button {
-                        onResetAll()
-                    } label: {
-                        Label("重置", systemImage: "arrow.counterclockwise")
-                            .font(.caption)
-                            .foregroundColor(.white)
-                    }
-                    .buttonStyle(.borderless)
-
-                    // 最小化按钮
-                    Button {
-                        withAnimation {
-                            showPanel = false
-                        }
-                    } label: {
-                        Image(systemName: "chevron.down")
-                            .font(.caption)
-                            .foregroundColor(.white)
-                    }
-                    .buttonStyle(.borderless)
-                }
-            }
-            .padding()
-            .background(Color(.systemGray6))
-
-            Divider()
-
-            // 图层列表
-            ScrollView {
+            if showPanel {
+                // 展开状态：完整面板
                 VStack(spacing: 0) {
-                    ForEach(Array(layers.enumerated()), id: \.element.id) { index, layer in
-                        LayerRow(
-                            layer: layer,
-                            isSelected: selectedLayerId == layer.id,
-                            onTap: {
-                                selectedLayerId = layer.id
-                            },
-                            onVisibilityToggle: {
-                                layers[index].isVisible.toggle()
-                            },
-                            onOpacityChange: { newOpacity in
-                                layers[index].opacity = newOpacity
-                            },
-                            onLockToggle: {
-                                layers[index].isLocked.toggle()
+                    // 面板头部
+                    HStack {
+                        Text("图层")
+                            .font(.headline)
+
+                        Spacer()
+
+                        // 快捷操作按钮组
+                        HStack(spacing: 8) {
+                            // 交换图层按钮
+                            Button {
+                                onSwapLayers()
+                            } label: {
+                                Label("交换", systemImage: "arrow.up.arrow.down")
+                                    .font(.caption)
                             }
-                        )
+                            .buttonStyle(.borderless)
+                            .disabled(layers.count < 2)
 
-                        if index < layers.count - 1 {
-                            Divider()
-                                .padding(.leading, 60)
+                            // 重置全部按钮
+                            Button {
+                                onResetAll()
+                            } label: {
+                                Label("重置", systemImage: "arrow.counterclockwise")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.borderless)
+
+                            // 最小化按钮
+                            Button {
+                                withAnimation {
+                                    showPanel = false
+                                }
+                            } label: {
+                                Image(systemName: "chevron.down")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.borderless)
                         }
                     }
-                }
-            }
+                    .padding()
+                    .background(Color(.systemGray6))
 
-            // 底部提示
-            VStack(spacing: 4) {
-                Text("双击图片选择图层")
-                    .font(.caption)
-                Text("双指缩放 · 单指拖动")
-                    .font(.caption2)
+                    Divider()
+
+                    // 图层列表
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(Array(layers.enumerated()), id: \.element.id) { index, layer in
+                                LayerRow(
+                                    layer: layer,
+                                    isSelected: selectedLayerId == layer.id,
+                                    onTap: {
+                                        selectedLayerId = layer.id
+                                    },
+                                    onVisibilityToggle: {
+                                        layers[index].isVisible.toggle()
+                                    },
+                                    onOpacityChange: { newValue in
+                                        layers[index].opacity = newValue
+                                    },
+                                    onLockToggle: {
+                                        layers[index].isLocked.toggle()
+                                    }
+                                )
+
+                                if index < layers.count - 1 {
+                                    Divider()
+                                        .padding(.leading, 60)
+                                }
+                            }
+                        }
+                    }
+
+                    // 底部提示
+                    VStack(spacing: 4) {
+                        Text("双击图片选择图层")
+                            .font(.caption)
+                        Text("双指缩放 · 单指拖动")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.secondary)
+                    .padding(.vertical, 8)
+                }
+                .background(Color(.systemBackground))
+                .frame(height: 250)
+                .frame(maxWidth: .infinity)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else {
+                // 最小化状态：只显示展开按钮
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button {
+                            withAnimation {
+                                showPanel = true
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("图层")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                                Image(systemName: "chevron.up")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.blue)
+                            .clipShape(Capsule())
+                        }
+                        .padding(.bottom, 8)
+                        Spacer()
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .transition(.opacity)
             }
-            .foregroundColor(.secondary)
-            .padding(.vertical, 8)
         }
-        .background(Color(.systemBackground))
-        .frame(height: showPanel ? 250 : 0)
-        .frame(maxWidth: .infinity)
-        .overlay(
-            // 最小化时的展开按钮
-            Group {
-                if !showPanel {
-                    Button {
-                        withAnimation {
-                            showPanel = true
-                        }
-                    } label: {
-                        HStack {
-                            Text("图层")
-                                .font(.caption)
-                                .foregroundColor(.white)
-                            Image(systemName: "chevron.up")
-                                .font(.caption)
-                                .foregroundColor(.white)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.blue)
-                        .clipShape(Capsule())
-                    }
-                    .padding(.bottom, 8)
-                }
-            },
-            alignment: .top
-        )
         .animation(.spring(response: 0.3), value: showPanel)
     }
 }
@@ -147,7 +152,7 @@ struct LayerRow: View {
     let onOpacityChange: (Double) -> Void
     let onLockToggle: () -> Void
 
-    @State private var isEditingOpacity = false
+    @State private var showOpacitySlider = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -169,43 +174,67 @@ struct LayerRow: View {
                 Text(layer.name)
                     .font(.subheadline)
                     .fontWeight(isSelected ? .semibold : .regular)
+                    .lineLimit(1)
 
-                if isEditingOpacity {
-                    // 透明度滑块
+                if showOpacitySlider {
+                    // 透明度滑块 - 独占一行
                     HStack(spacing: 8) {
                         Image(systemName: "opacity")
                             .font(.caption)
-                        Slider(value: Binding(
-                            get: { layer.opacity },
-                            set: { onOpacityChange($0) }
-                        ), in: 0...1)
-                            .frame(width: 120)
+                            .foregroundColor(.secondary)
+                        Slider(
+                            value: Binding(
+                                get: { layer.opacity },
+                                set: { newValue in
+                                    onOpacityChange(newValue)
+                                }
+                            ),
+                            in: 0...1
+                        )
                         Text("\(Int(layer.opacity * 100))%")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .frame(width: 35)
                     }
+                    .transition(.opacity)
                 } else {
-                    // 图层信息
+                    // 图层信息 - 一行显示
                     HStack(spacing: 6) {
                         Image(systemName: "scale.3d")
                             .font(.caption2)
                         Text("x\(String(format: "%.1f", layer.scale))")
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundColor(.secondary)
 
-                        Spacer().frame(width: 8)
+                        Spacer().frame(width: 6)
 
                         Image(systemName: "arrow.up.forward")
                             .font(.caption2)
                         Text("\(Int(layer.position.width)), \(Int(layer.position.height))")
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundColor(.secondary)
+
+                        Spacer().frame(width: 6)
+
+                        // 可点击的透明度值
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showOpacitySlider.toggle()
+                            }
+                        } label: {
+                            HStack(spacing: 2) {
+                                Image(systemName: "opacity")
+                                    .font(.caption2)
+                                Text("\(Int(layer.opacity * 100))%")
+                                    .font(.caption2)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
-
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             // 可见性切换按钮
             Button {
@@ -224,27 +253,16 @@ struct LayerRow: View {
                     .foregroundColor(layer.isLocked ? .orange : .secondary)
             }
             .buttonStyle(.borderless)
-
-            // 透明度编辑按钮
-            Button {
-                withAnimation {
-                    isEditingOpacity.toggle()
-                }
-            } label: {
-                Image(systemName: isEditingOpacity ? "checkmark" : "slider.horizontal.3")
-                    .font(.caption)
-                    .foregroundColor(isEditingOpacity ? .blue : .secondary)
-            }
-            .buttonStyle(.borderless)
         }
         .padding(12)
         .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
-            if isEditingOpacity {
+            // 点击其他区域时收起滑块
+            if showOpacitySlider {
                 withAnimation {
-                    isEditingOpacity = false
+                    showOpacitySlider = false
                 }
             }
         }
