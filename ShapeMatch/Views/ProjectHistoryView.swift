@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct ProjectHistoryView: View {
-    var onProjectSelected: ((UUID) -> Void)?
-
     @State private var projects: [ProjectMetadata] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
@@ -34,7 +32,11 @@ struct ProjectHistoryView: View {
         }
         .navigationDestination(isPresented: Binding(
             get: { selectedProject != nil },
-            set: { _ in /* 由返回按钮控制 */ }
+            set: { newValue in
+                if !newValue {
+                    selectedProject = nil
+                }
+            }
         )) {
             if let project = selectedProject {
                 ComparisonDestination(project: project)
@@ -127,7 +129,6 @@ struct ProjectHistoryView: View {
             switch result {
             case .success(let projectData):
                 selectedProject = projectData
-                onProjectSelected?(metadata.id)
             case .failure(let error):
                 print("❌ 加载项目失败: \(error.localizedDescription)")
             }
@@ -224,5 +225,5 @@ struct ComparisonDestination: View {
 }
 
 #Preview {
-    ProjectHistoryView { _ in }
+    ProjectHistoryView()
 }

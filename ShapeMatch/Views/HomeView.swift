@@ -13,9 +13,6 @@ struct HomeView: View {
     @State private var showHistory = false
     @State private var isComparing = false
     @State private var shouldShowComparison = false
-    @State private var selectedProjectId: UUID?
-    @State private var selectedProjectName: String?
-    @State private var shouldAutoNavigate = false
 
     var canCompare: Bool {
         leftImage != nil && rightImage != nil
@@ -121,20 +118,10 @@ struct HomeView: View {
                 }
             }
             .navigationDestination(isPresented: $showHistory) {
-                ProjectHistoryView { projectId in
-                    loadProjectAndNavigate(projectId)
-                }
+                ProjectHistoryView()
             }
             .navigationDestination(isPresented: $shouldShowComparison) {
                 comparisonDestination
-            }
-            .onChange(of: shouldShowComparison) { newValue in
-                // 当用户返回时，清除状态
-                if !newValue {
-                    selectedProjectId = nil
-                    selectedProjectName = nil
-                    shouldAutoNavigate = false
-                }
             }
         }
     }
@@ -143,22 +130,11 @@ struct HomeView: View {
     @ViewBuilder
     private var comparisonDestination: some View {
         if let left = leftImage, let right = rightImage {
-            if let projectId = selectedProjectId,
-               let projectName = selectedProjectName {
-                // 从历史记录加载
-                ComparisonView(
-                    leftImage: left,
-                    rightImage: right,
-                    projectId: projectId,
-                    projectName: projectName
-                )
-            } else {
-                // 新建对比
-                ComparisonView(
-                    leftImage: left,
-                    rightImage: right
-                )
-            }
+            // 新建对比
+            ComparisonView(
+                leftImage: left,
+                rightImage: right
+            )
         }
     }
 
@@ -167,35 +143,6 @@ struct HomeView: View {
         if let img1 = UIImage(named: "pindou1"), let img2 = UIImage(named: "pindou2") {
             leftImage = img1
             rightImage = img2
-        }
-    }
-
-    private func loadProjectAndNavigate(_ id: UUID) {
-        ProjectStorage.shared.loadProject(id: id) { result in
-            switch result {
-            case .success(let projectData):
-                // 恢复图层
-                let layers = ProjectStorage.shared.restoreLayers(from: projectData)
-
-                if layers.count >= 2 {
-                    // 设置图片
-                    leftImage = layers[0].image
-                    rightImage = layers[1].image
-
-                    // 设置项目信息，用于标识是历史项目
-                    selectedProjectId = id
-                    selectedProjectName = projectData.name
-
-                    // 关闭历史列表，进入对比页面
-                    showHistory = false
-                    shouldShowComparison = true
-
-                    print("✅ 已加载项目: \(projectData.name)")
-                }
-
-            case .failure(let error):
-                print("❌ 加载项目失败: \(error.localizedDescription)")
-            }
         }
     }
 }
