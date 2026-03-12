@@ -10,12 +10,12 @@ import SwiftUI
 struct HomeView: View {
     @State private var leftImage: UIImage?
     @State private var rightImage: UIImage?
+    @State private var showHistory = false
+    @State private var isComparing = false
+    @State private var shouldShowComparison = false
     @State private var selectedProjectId: UUID?
     @State private var selectedProjectName: String?
-    @State private var isComparing = false
-    @State private var showHistory = false
     @State private var shouldAutoNavigate = false
-    @State private var shouldShowComparison = false
 
     var canCompare: Bool {
         leftImage != nil && rightImage != nil
@@ -71,7 +71,11 @@ struct HomeView: View {
 
                 // 对比按钮
                 Button {
-                    shouldShowComparison = true
+                    isComparing = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isComparing = false
+                        shouldShowComparison = true
+                    }
                 } label: {
                     if isComparing {
                         HStack(spacing: 6) {

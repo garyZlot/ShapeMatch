@@ -8,14 +8,14 @@
 import SwiftUI
 
 struct ProjectHistoryView: View {
-    @Environment(\.dismiss) private var dismiss
+    var onProjectSelected: ((UUID) -> Void)?
+
     @State private var projects: [ProjectMetadata] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var showDeleteAlert = false
     @State private var projectToDelete: ProjectMetadata?
-
-    let onLoadProject: (UUID) -> Void
+    @State private var selectedProject: ProjectData?
 
     var body: some View {
         Group {
@@ -31,6 +31,14 @@ struct ProjectHistoryView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             loadProjects()
+        }
+        .navigationDestination(isPresented: Binding(
+            get: { selectedProject != nil },
+            set: { _ in /* 由返回按钮控制 */ }
+        )) {
+            if let project = selectedProject {
+                ComparisonDestination(project: project)
+            }
         }
         .alert("删除项目", isPresented: $showDeleteAlert, presenting: projectToDelete) { project in
             Button("取消", role: .cancel) {}
@@ -67,8 +75,7 @@ struct ProjectHistoryView: View {
             LazyVStack(spacing: 12) {
                 ForEach(projects) { project in
                     ProjectCard(project: project) {
-                        onLoadProject(project.id)
-                        dismiss()
+                        loadAndSelectProject(project)
                     }
                     .contextMenu {
                         Button(role: .destructive) {
@@ -111,6 +118,18 @@ struct ProjectHistoryView: View {
                 }
             case .failure(let error):
                 errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func loadAndSelectProject(_ metadata: ProjectMetadata) {
+        ProjectStorage.shared.loadProject(id: metadata.id) { result in
+            switch result {
+            case .success(let projectData):
+                selectedProject = projectData
+                onProjectSelected?(metadata.id)
+            case .failure(let error):
+                print("❌ 加载项目失败: \(error.localizedDescription)")
             }
         }
     }
@@ -182,6 +201,25 @@ struct ProjectCard: View {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
         return formatter.localizedString(for: project.updatedAt, relativeTo: Date())
+    }
+}
+
+// MARK: - 对比目标视图（包装器）
+struct ComparisonDestination: View {
+    let project: ProjectData
+
+    var body: some View {
+        if project.layers.count >= 2 {
+            let layers = ProjectStorage.shared.restoreLayers(from: project)
+            ComparisonView(
+                leftImage: layers[0].image,
+                rightImage: layers[1].image,
+                projectId: project.id,
+                projectName: project.name
+            )
+        } else {
+            Text("项目数据不完整")
+        }
     }
 }
 

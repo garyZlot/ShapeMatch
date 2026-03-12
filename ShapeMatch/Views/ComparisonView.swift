@@ -49,58 +49,56 @@ struct ComparisonView: View {
     }
 
     var body: some View {
-        NavigationView {
-            ZStack(alignment: .bottom) {
-                // 主画布区域
-                GeometryReader { geometry in
-                    overlayModeView(geometry: geometry)
-                }
+        ZStack(alignment: .bottom) {
+            // 主画布区域
+            GeometryReader { geometry in
+                overlayModeView(geometry: geometry)
+            }
 
-                // 图层面板
-                VStack {
-                    Spacer()
-                    LayerControlPanel(
-                        layers: $layers,
-                        selectedLayerId: $selectedLayerId,
-                        showPanel: $showLayerPanel,
-                        onSwapLayers: {
-                            swapLayers()
-                        },
-                        onResetAll: {
-                            resetAllLayers()
-                        }
-                    )
-                }
-            }
-            .navigationTitle("图层对比")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        withAnimation {
-                            if showFineTunePanel {
-                                showFineTunePanel = false
-                            } else if selectedLayerId != nil {
-                                showFineTunePanel = true
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.system(size: 16))
+            // 图层面板
+            VStack {
+                Spacer()
+                LayerControlPanel(
+                    layers: $layers,
+                    selectedLayerId: $selectedLayerId,
+                    showPanel: $showLayerPanel,
+                    onSwapLayers: {
+                        swapLayers()
+                    },
+                    onResetAll: {
+                        resetAllLayers()
                     }
-                    .tint(showFineTunePanel ? .blue : .secondary)
-                    .disabled(selectedLayerId == nil)
+                )
+            }
+        }
+        .navigationTitle("图层对比")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    withAnimation {
+                        if showFineTunePanel {
+                            showFineTunePanel = false
+                        } else if selectedLayerId != nil {
+                            showFineTunePanel = true
+                        }
+                    }
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 16))
                 }
+                .tint(showFineTunePanel ? .blue : .secondary)
+                .disabled(selectedLayerId == nil)
             }
-            .onAppear {
-                loadSavedProject()
-            }
-            .onDisappear {
-                saveProject()
-            }
-            .onChange(of: layers) { oldValue, newValue in
-                scheduleAutoSave()
-            }
+        }
+        .onAppear {
+            loadSavedProject()
+        }
+        .onDisappear {
+            saveProject()
+        }
+        .onChange(of: layers) { oldValue, newValue in
+            scheduleAutoSave()
         }
         .overlay(alignment: .topLeading) {
             // 浮动微调面板 - 在根视图层级
