@@ -34,6 +34,8 @@ struct ComparisonView: View {
     @State private var fineTunePanelPosition = CGPoint(x: 0, y: 0)
     @State private var comparisonMode: ComparisonMode = .overlay
     @State private var splitPosition: CGFloat = 0.5 // 分屏分割位置 (0.0 - 1.0)
+    @State private var allLayersLockedScale: CGFloat = 1.0 // 所有图层锁定时的整体缩放
+    @State private var lastAllLayersLockedScale: CGFloat = 1.0 // 记录上次的缩放值
 
     init(leftImage: UIImage, rightImage: UIImage) {
         self.leftImage = leftImage
@@ -191,6 +193,12 @@ struct ComparisonView: View {
     }
 
     // MARK: - 辅助方法
+
+    // 检查是否所有可见图层都已锁定
+    private var areAllLayersLocked: Bool {
+        layers.filter { $0.isVisible }.allSatisfy { $0.isLocked }
+    }
+
     private func setupLayers() {
         layers = [
             Layer(
@@ -222,6 +230,10 @@ struct ComparisonView: View {
 
     private func resetAllLayers() {
         withAnimation {
+            // 重置整体缩放
+            allLayersLockedScale = 1.0
+            lastAllLayersLockedScale = 1.0
+
             layers = layers.map { layer in
                 Layer(
                     name: layer.name,
@@ -355,6 +367,26 @@ struct ComparisonView: View {
                             width: geometry.size.width,
                             height: geometry.size.height
                         )
+                        .scaleEffect(areAllLayersLocked ? allLayersLockedScale : 1.0)
+                    }
+                }
+
+                // 所有图层锁定时的提示
+                if areAllLayersLocked && allLayersLockedScale != 1.0 {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Text(String(format: "整体缩放: %.0f%%", allLayersLockedScale * 100))
+                                .font(.caption)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Capsule())
+                                .shadow(radius: 2)
+                            Spacer()
+                        }
+                        Spacer()
                     }
                 }
             }
@@ -368,6 +400,19 @@ struct ComparisonView: View {
                     showFineTunePanel = false
                 }
             }
+            // 当所有图层都锁定时，允许整体缩放
+            .gesture(
+                areAllLayersLocked ? MagnificationGesture()
+                    .onChanged { value in
+                        let delta = value / lastAllLayersLockedScale
+                        lastAllLayersLockedScale = value
+                        allLayersLockedScale = max(0.5, min(allLayersLockedScale * delta, 3.0))
+                    }
+                    .onEnded { _ in
+                        lastAllLayersLockedScale = 1.0
+                    }
+                : nil
+            )
         }
     }
 

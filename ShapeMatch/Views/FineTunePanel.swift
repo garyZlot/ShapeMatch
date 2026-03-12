@@ -82,43 +82,48 @@ struct FineTunePanel: View {
                         .font(.caption2)
                         .foregroundStyle(.secondary)
 
-                    HStack(spacing: 4) {
+                    // 方向键十字形布局（键盘布局）
+                    VStack(spacing: 4) {
+                        // 上箭头
                         Button { adjustPosition(x: 0, y: -positionStep) } label: {
                             Image(systemName: "arrow.up")
-                                .font(.system(size: 12))
-                                .frame(width: 32, height: 24)
+                                .font(.system(size: 14))
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
+                        .frame(width: 40, height: 32)
 
-                        Button { adjustPosition(x: -positionStep, y: 0) } label: {
-                            Image(systemName: "arrow.left")
-                                .font(.system(size: 12))
-                                .frame(width: 32, height: 24)
+                        // 中间行：左、下、右
+                        HStack(spacing: 4) {
+                            Button { adjustPosition(x: -positionStep, y: 0) } label: {
+                                Image(systemName: "arrow.left")
+                                    .font(.system(size: 14))
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .frame(width: 40, height: 32)
+
+                            Button { adjustPosition(x: 0, y: positionStep) } label: {
+                                Image(systemName: "arrow.down")
+                                    .font(.system(size: 14))
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .frame(width: 40, height: 32)
+
+                            Button { adjustPosition(x: positionStep, y: 0) } label: {
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 14))
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .frame(width: 40, height: 32)
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
 
+                        // 坐标显示
                         Text("(\(Int(position.width)), \(Int(position.height)))")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
-                            .frame(minWidth: 45, alignment: .center)
-
-                        Button { adjustPosition(x: positionStep, y: 0) } label: {
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 12))
-                                .frame(width: 32, height: 24)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-
-                        Button { adjustPosition(x: 0, y: positionStep) } label: {
-                            Image(systemName: "arrow.down")
-                                .font(.system(size: 12))
-                                .frame(width: 32, height: 24)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
                     }
                 }
 
