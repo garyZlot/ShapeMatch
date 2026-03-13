@@ -89,7 +89,7 @@ struct ComparisonView: View {
                             ProgressView()
                                 .scaleEffect(0.8)
                         } else if hasUnsavedChanges {
-                            Image(systemName: "square.and.arrow.down")
+                            Image(systemName: "square.and.arrow.up")
                                 .font(.system(size: 16))
                         } else {
                             Image(systemName: "checkmark")
@@ -228,23 +228,24 @@ struct ComparisonView: View {
         }
     }
 
-    /// 保存快照（创建新的历史记录）
+    /// 保存快照（创建新的历史记录或更新当前项目）
     private func saveSnapshot() {
         isSaving = true
 
-        // 创建新的项目 ID
-        let newId = UUID()
+        // 如果还没有项目 ID，创建新的
+        if currentProjectId == nil {
+            currentProjectId = UUID()
+        }
+
+        let id = currentProjectId!
         let snapshotName = "快照 \(DateFormatter.shortTime.string(from: Date()))"
 
-        ProjectStorage.shared.saveProject(id: newId, name: snapshotName, layers: layers) { [self] result in
+        ProjectStorage.shared.saveProject(id: id, name: snapshotName, layers: layers) { [self] result in
             DispatchQueue.main.async {
                 isSaving = false
 
                 switch result {
                 case .success:
-                    snapshotCount += 1
-                    // 更新当前项目 ID，后续的自动保存会更新到这个新快照
-                    currentProjectId = newId
                     // 记录已保存的状态
                     lastSavedLayers = layers
                     hasUnsavedChanges = false
