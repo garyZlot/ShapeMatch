@@ -128,8 +128,13 @@ class ProjectStorage {
                 let fileURL = self.projectFileURL(for: id)
                 try jsonData.write(to: fileURL, options: .atomic)
 
-                // 更新元数据
-                self.updateMetadata([metadata])
+                // 更新元数据 - 保留所有现有项目，添加或更新当前项目
+                var allMetadata = try self.loadAllMetadataSync()
+                // 移除同 ID 的旧元数据（如果有）
+                allMetadata.removeAll { $0.id == id }
+                // 添加新的元数据
+                allMetadata.append(metadata)
+                self.updateMetadata(allMetadata)
 
                 DispatchQueue.main.async {
                     completion?(.success(()))

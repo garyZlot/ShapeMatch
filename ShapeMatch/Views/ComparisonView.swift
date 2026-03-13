@@ -27,6 +27,7 @@ struct ComparisonView: View {
     @State private var showSaveAlert = false
     @State private var saveSnapshotName = ""
     @State private var snapshotCount = 0
+    @State private var currentProjectId: UUID?  // 当前项目的 ID（自动保存用）
 
     init(leftImage: UIImage, rightImage: UIImage) {
         self.leftImage = leftImage
@@ -191,6 +192,9 @@ struct ComparisonView: View {
                 layers = restoredLayers
                 selectedLayerId = layers.first?.id
 
+                // 设置当前项目 ID（这样自动保存会更新这个项目，而不是创建新的）
+                currentProjectId = id
+
                 print("✅ 已恢复项目: \(projectData.name) (\(projectData.layers.count) 个图层)")
 
             case .failure(let error):
@@ -203,13 +207,18 @@ struct ComparisonView: View {
 
     /// 保存项目
     private func saveProject() {
-        let id = projectId ?? UUID()
+        // 如果还没有当前项目 ID，创建一个
+        if currentProjectId == nil {
+            currentProjectId = UUID()
+        }
+
+        let id = currentProjectId!
         let name = projectName ?? "对比项目 \(DateFormatter.shortDate.string(from: Date()))"
 
         ProjectStorage.shared.saveProject(id: id, name: name, layers: layers) { result in
             switch result {
             case .success:
-                print("✅ 项目已自动保存")
+                print("✅ 项目已自动保存: \(name)")
             case .failure(let error):
                 print("❌ 保存项目失败: \(error.localizedDescription)")
             }
@@ -227,7 +236,8 @@ struct ComparisonView: View {
                 switch result {
                 case .success:
                     snapshotCount += 1
-                    // 可选：显示成功提示
+                    // 更新当前项目 ID，后续的自动保存会更新到这个新快照
+                    currentProjectId = newId
                     print("✅ 快照已保存: \(snapshotName)")
                 case .failure(let error):
                     print("❌ 保存快照失败: \(error.localizedDescription)")
