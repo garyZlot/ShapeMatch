@@ -8,6 +8,7 @@
 import SwiftUI
 import PhotosUI
 
+@available(iOS 16.0, *)
 struct ImagePickerView: View {
     @Binding var selectedImage: UIImage?
     let sourceType: SourceType
@@ -102,6 +103,7 @@ struct ImagePickerView: View {
     }
 }
 
+@available(iOS 16.0, *)
 #Preview {
     VStack {
         ImagePickerView(
