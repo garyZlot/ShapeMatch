@@ -24,6 +24,9 @@ struct ComparisonView: View {
     @State private var allLayersLockedScale: CGFloat = 1.0 // 所有图层锁定时的整体缩放
     @State private var lastAllLayersLockedScale: CGFloat = 1.0 // 记录上次的缩放值
     @State private var autoSaveWorkItem: DispatchWorkItem?
+    @State private var showSaveAlert = false
+    @State private var saveSnapshotName = ""
+    @State private var snapshotCount = 0
 
     init(leftImage: UIImage, rightImage: UIImage) {
         self.leftImage = leftImage
@@ -75,20 +78,31 @@ struct ComparisonView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    withAnimation {
-                        if showFineTunePanel {
-                            showFineTunePanel = false
-                        } else if selectedLayerId != nil {
-                            showFineTunePanel = true
-                        }
+                HStack(spacing: 12) {
+                    // 保存快照按钮
+                    Button {
+                        showSaveAlert = true
+                        saveSnapshotName = "快照 \(DateFormatter.shortTime.string(from: Date()))"
+                    } label: {
+                        Label("快照", systemImage: "camera.fill")
+                            .font(.system(size: 16))
                     }
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 16))
+
+                    Button {
+                        withAnimation {
+                            if showFineTunePanel {
+                                showFineTunePanel = false
+                            } else if selectedLayerId != nil {
+                                showFineTunePanel = true
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 16))
+                    }
+                    .tint(showFineTunePanel ? .blue : .secondary)
+                    .disabled(selectedLayerId == nil)
                 }
-                .tint(showFineTunePanel ? .blue : .secondary)
-                .disabled(selectedLayerId == nil)
             }
         }
         .onAppear {
@@ -100,6 +114,18 @@ struct ComparisonView: View {
         .onChange(of: layers) { oldValue, newValue in
             scheduleAutoSave()
         }
+        .alert("保存快照", isPresented: $showSaveAlert) {
+            TextField("快照名称", text: $saveSnapshotName)
+
+            Button("取消", role: .cancel) {}
+
+            Button("保存") {
+                saveAsNewSnapshot(name: saveSnapshotName)
+            }
+        } message: {
+            Text("为当前状态创建一个新的快照")
+        }
+        .overlay(alignment: .topLeading) {
         .overlay(alignment: .topLeading) {
             // 浮动微调面板 - 在根视图层级
             if showFineTunePanel, let selectedId = selectedLayerId,
@@ -187,6 +213,26 @@ struct ComparisonView: View {
                 print("✅ 项目已自动保存")
             case .failure(let error):
                 print("❌ 保存项目失败: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// 保存为新快照（创建新的历史记录）
+    private func saveAsNewSnapshot(name: String) {
+        // 创建新的项目 ID
+        let newId = UUID()
+        let snapshotName = name.isEmpty ? "快照 \(DateFormatter.shortTime.string(from: Date()))" : name
+
+        ProjectStorage.shared.saveProject(id: newId, name: snapshotName, layers: layers) { [self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success:
+                    snapshotCount += 1
+                    // 可选：显示成功提示
+                    print("✅ 快照已保存: \(snapshotName)")
+                case .failure(let error):
+                    print("❌ 保存快照失败: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -464,6 +510,23 @@ struct CheckerboardPattern: View {
             }
         }
     }
+}
+
+// MARK: - DateFormatter 扩展
+extension DateFormatter {
+    static let shortDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .none
+        return formatter
+    }()
+
+    static let shortTime: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter
+    }()
 }
 
 #Preview {
