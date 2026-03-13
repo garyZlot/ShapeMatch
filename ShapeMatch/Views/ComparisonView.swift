@@ -25,10 +25,7 @@ struct ComparisonView: View {
     @State private var lastAllLayersLockedScale: CGFloat = 1.0 // 记录上次的缩放值
     @State private var autoSaveWorkItem: DispatchWorkItem?
     @State private var snapshotCount = 0
-    @State private var currentProjectId: UUID?  // 当前项目的 ID（自动保存用）
-    @State private var hasUnsavedChanges = false  // 是否有未保存的改动
-    @State private var isSaving = false  // 是否正在保存
-    @State private var lastSavedLayers: [Layer] = []  // 上次保存时的图层状态
+    @State private var currentProjectId: UUID?  // 当前项目的 ID
 
     init(leftImage: UIImage, rightImage: UIImage) {
         self.leftImage = leftImage
@@ -80,54 +77,30 @@ struct ComparisonView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                HStack(spacing: 12) {
-                    // 保存快照按钮
-                    Button {
-                        saveSnapshot()
-                    } label: {
-                        if isSaving {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        } else if hasUnsavedChanges {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.system(size: 16))
-                        } else {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 16))
-                                .foregroundStyle(.green)
+                Button {
+                    withAnimation {
+                        if showFineTunePanel {
+                            showFineTunePanel = false
+                        } else if selectedLayerId != nil {
+                            showFineTunePanel = true
                         }
                     }
-                    .disabled(isSaving)
-
-                    Button {
-                        withAnimation {
-                            if showFineTunePanel {
-                                showFineTunePanel = false
-                            } else if selectedLayerId != nil {
-                                showFineTunePanel = true
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.system(size: 16))
-                    }
-                    .tint(showFineTunePanel ? .blue : .secondary)
-                    .disabled(selectedLayerId == nil)
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 16))
                 }
+                .tint(showFineTunePanel ? .blue : .secondary)
+                .disabled(selectedLayerId == nil)
             }
         }
         .onAppear {
             loadSavedProject()
-            // 记录初始状态
-            lastSavedLayers = layers
         }
         .onDisappear {
             saveProject()
         }
         .onChange(of: layers) { oldValue, newValue in
             scheduleAutoSave()
-            // 检测图层是否有改动
-            checkForChanges()
         }
         .overlay(alignment: .topLeading) {
             // 浮动微调面板 - 在根视图层级
@@ -226,40 +199,6 @@ struct ComparisonView: View {
                 print("❌ 保存项目失败: \(error.localizedDescription)")
             }
         }
-    }
-
-    /// 保存快照（创建新的历史记录或更新当前项目）
-    private func saveSnapshot() {
-        isSaving = true
-
-        // 如果还没有项目 ID，创建新的
-        if currentProjectId == nil {
-            currentProjectId = UUID()
-        }
-
-        let id = currentProjectId!
-        let snapshotName = "快照 \(DateFormatter.shortTime.string(from: Date()))"
-
-        ProjectStorage.shared.saveProject(id: id, name: snapshotName, layers: layers) { [self] result in
-            DispatchQueue.main.async {
-                isSaving = false
-
-                switch result {
-                case .success:
-                    // 记录已保存的状态
-                    lastSavedLayers = layers
-                    hasUnsavedChanges = false
-                    print("✅ 快照已保存: \(snapshotName)")
-                case .failure(let error):
-                    print("❌ 保存快照失败: \(error.localizedDescription)")
-                }
-            }
-        }
-    }
-
-    /// 检测图层是否有改动
-    private func checkForChanges() {
-        hasUnsavedChanges = layers != lastSavedLayers
     }
 
     /// 调度自动保存（延迟2秒）
