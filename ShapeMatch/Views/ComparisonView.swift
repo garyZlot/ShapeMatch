@@ -24,10 +24,11 @@ struct ComparisonView: View {
     @State private var allLayersLockedScale: CGFloat = 1.0 // 所有图层锁定时的整体缩放
     @State private var lastAllLayersLockedScale: CGFloat = 1.0 // 记录上次的缩放值
     @State private var autoSaveWorkItem: DispatchWorkItem?
-    @State private var showSaveAlert = false
-    @State private var saveSnapshotName = ""
     @State private var snapshotCount = 0
     @State private var currentProjectId: UUID?  // 当前项目的 ID（自动保存用）
+    @State private var hasUnsavedChanges = false  // 是否有未保存的改动
+    @State private var isSaving = false  // 是否正在保存
+    @State private var lastSavedLayers: [Layer] = []  // 上次保存时的图层状态
 
     init(leftImage: UIImage, rightImage: UIImage) {
         self.leftImage = leftImage
@@ -82,12 +83,21 @@ struct ComparisonView: View {
                 HStack(spacing: 12) {
                     // 保存快照按钮
                     Button {
-                        showSaveAlert = true
-                        saveSnapshotName = "快照 \(DateFormatter.shortTime.string(from: Date()))"
+                        saveSnapshot()
                     } label: {
-                        Label("快照", systemImage: "camera.fill")
-                            .font(.system(size: 16))
+                        if isSaving {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else if hasUnsavedChanges {
+                            Image(systemName: "square.and.arrow.down")
+                                .font(.system(size: 16))
+                        } else {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 16))
+                                .foregroundStyle(.green)
+                        }
                     }
+                    .disabled(isSaving)
 
                     Button {
                         withAnimation {
@@ -108,23 +118,16 @@ struct ComparisonView: View {
         }
         .onAppear {
             loadSavedProject()
+            // 记录初始状态
+            lastSavedLayers = layers
         }
         .onDisappear {
             saveProject()
         }
         .onChange(of: layers) { oldValue, newValue in
             scheduleAutoSave()
-        }
-        .alert("保存快照", isPresented: $showSaveAlert) {
-            TextField("快照名称", text: $saveSnapshotName)
-
-            Button("取消", role: .cancel) {}
-
-            Button("保存") {
-                saveAsNewSnapshot(name: saveSnapshotName)
-            }
-        } message: {
-            Text("为当前状态创建一个新的快照")
+            // 检测图层是否有改动
+            checkForChanges()
         }
         .overlay(alignment: .topLeading) {
             // 浮动微调面板 - 在根视图层级
@@ -225,25 +228,37 @@ struct ComparisonView: View {
         }
     }
 
-    /// 保存为新快照（创建新的历史记录）
-    private func saveAsNewSnapshot(name: String) {
+    /// 保存快照（创建新的历史记录）
+    private func saveSnapshot() {
+        isSaving = true
+
         // 创建新的项目 ID
         let newId = UUID()
-        let snapshotName = name.isEmpty ? "快照 \(DateFormatter.shortTime.string(from: Date()))" : name
+        let snapshotName = "快照 \(DateFormatter.shortTime.string(from: Date()))"
 
         ProjectStorage.shared.saveProject(id: newId, name: snapshotName, layers: layers) { [self] result in
             DispatchQueue.main.async {
+                isSaving = false
+
                 switch result {
                 case .success:
                     snapshotCount += 1
                     // 更新当前项目 ID，后续的自动保存会更新到这个新快照
                     currentProjectId = newId
+                    // 记录已保存的状态
+                    lastSavedLayers = layers
+                    hasUnsavedChanges = false
                     print("✅ 快照已保存: \(snapshotName)")
                 case .failure(let error):
                     print("❌ 保存快照失败: \(error.localizedDescription)")
                 }
             }
         }
+    }
+
+    /// 检测图层是否有改动
+    private func checkForChanges() {
+        hasUnsavedChanges = layers != lastSavedLayers
     }
 
     /// 调度自动保存（延迟2秒）
