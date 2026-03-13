@@ -126,7 +126,6 @@ struct ComparisonView: View {
             Text("为当前状态创建一个新的快照")
         }
         .overlay(alignment: .topLeading) {
-        .overlay(alignment: .topLeading) {
             // 浮动微调面板 - 在根视图层级
             if showFineTunePanel, let selectedId = selectedLayerId,
                let index = layers.firstIndex(where: { $0.id == selectedId }) {
