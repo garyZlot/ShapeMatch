@@ -7,11 +7,13 @@
 
 import SwiftUI
 import PhotosUI
+import AVFoundation
 
 struct ImagePickerView: View {
     @Binding var selectedImage: UIImage?
     let sourceType: SourceType
     let title: String
+    let overlayImage: UIImage?
 
     enum SourceType {
         case left
@@ -20,6 +22,9 @@ struct ImagePickerView: View {
 
     @State private var pickerItem: PhotosPickerItem?
     @State private var showingImagePicker = false
+    @State private var showingCameraCapture = false
+    @State private var showingAlert = false
+    @State private var alertMessage = ""
 
     var body: some View {
         VStack(spacing: 8) {
@@ -74,9 +79,9 @@ struct ImagePickerView: View {
                     }
                 }
 
-                // 拍照按钮（需要真机）
+                // 拍照按钮
                 Button {
-                    showingImagePicker = true
+                    checkCameraPermission()
                 } label: {
                     Label("拍照", systemImage: "camera")
                         .font(.caption)
@@ -84,7 +89,6 @@ struct ImagePickerView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .disabled(true) // 暂时禁用，后续可添加相机支持
             }
 
             // 清除按钮
@@ -99,6 +103,44 @@ struct ImagePickerView: View {
                 .buttonStyle(.borderless)
             }
         }
+        .alert("提示", isPresented: $showingAlert) {
+            Button("确定", role: .cancel) { }
+        } message: {
+            Text(alertMessage)
+        }
+        .sheet(isPresented: $showingCameraCapture) {
+            // 单次拍照，如果有 overlayImage 则显示为半透明遮罩
+            SingleCameraCaptureView(
+                overlayImage: overlayImage,
+                capturedImage: $selectedImage,
+                isPresented: $showingCameraCapture
+            )
+        }
+    }
+
+    // MARK: - 辅助方法
+    private func checkCameraPermission() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            showingCameraCapture = true
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        showingCameraCapture = true
+                    } else {
+                        alertMessage = "需要相机权限才能使用拍照功能"
+                        showingAlert = true
+                    }
+                }
+            }
+        case .denied, .restricted:
+            alertMessage = "相机权限已被拒绝，请在设置中开启"
+            showingAlert = true
+        @unknown default:
+            alertMessage = "无法访问相机"
+            showingAlert = true
+        }
     }
 }
 
@@ -107,12 +149,14 @@ struct ImagePickerView: View {
         ImagePickerView(
             selectedImage: .constant(nil),
             sourceType: .left,
-            title: "左图"
+            title: "左图",
+            overlayImage: nil
         )
         ImagePickerView(
             selectedImage: .constant(UIImage(systemName: "photo")),
             sourceType: .right,
-            title: "右图"
+            title: "右图",
+            overlayImage: nil
         )
     }
     .padding()

@@ -42,13 +42,15 @@ struct HomeView: View {
                     ImagePickerView(
                         selectedImage: $leftImage,
                         sourceType: .left,
-                        title: "左图"
+                        title: "左图",
+                        overlayImage: nil
                     )
 
                     ImagePickerView(
                         selectedImage: $rightImage,
                         sourceType: .right,
-                        title: "右图"
+                        title: "右图",
+                        overlayImage: leftImage
                     )
                 }
                 .padding(.horizontal, 16)

