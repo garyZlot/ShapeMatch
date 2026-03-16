@@ -84,7 +84,6 @@ struct HomeView: View {
                     label: "左图",
                     overlayImage: nil
                 )
-                .frame(maxWidth: .infinity)
 
                 // 中间箭头 + 互换按钮
                 VStack(spacing: 8) {
@@ -119,7 +118,6 @@ struct HomeView: View {
                     label: "右图",
                     overlayImage: leftImage
                 )
-                .frame(maxWidth: .infinity)
             }
 
             // 示例图片按钮
@@ -210,8 +208,7 @@ private struct ImageCard: View {
         VStack(spacing: 10) {
             // 图片预览区
             previewArea
-                .frame(maxWidth: .infinity)
-                .frame(height: 220)
+                .frame(width: 150, height: 220)
                 .background(Color(.secondarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .overlay(
@@ -268,6 +265,7 @@ private struct ImageCard: View {
                 .fontWeight(.medium)
                 .foregroundStyle(image != nil ? .blue : .secondary)
         }
+        .frame(width: 150)
         .onChange(of: pickerItem) { _, newItem in
             Task {
                 if let data = try? await newItem?.loadTransferable(type: Data.self),
@@ -309,6 +307,7 @@ private struct ImageCard: View {
             Image(uiImage: img)
                 .resizable()
                 .scaledToFill()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
                 .transition(.opacity.combined(with: .scale(scale: 0.96)))
         } else {
@@ -321,6 +320,7 @@ private struct ImageCard: View {
                     .font(.subheadline)
                     .foregroundStyle(Color(.systemGray3))
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
