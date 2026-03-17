@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct LayerControlPanel: View {
     @Binding var layers: [Layer]
@@ -108,32 +109,54 @@ struct LayerControlPanel: View {
                 .frame(maxWidth: .infinity)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             } else {
-                // 最小化状态：只显示展开按钮
+                // 最小化状态：只显示顶层切换按钮和展开按钮
                 VStack {
                     Spacer()
-                    HStack {
+                    HStack(spacing: 8) {
                         Spacer()
+
+                        // 找到顶层图层（通常是第二个图层）
+                        if layers.count >= 2 {
+                            let topLayerIndex = 1
+                            let topLayer = layers[topLayerIndex]
+
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    layers[topLayerIndex].isVisible.toggle()
+                                }
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: topLayer.isVisible ? "eye.fill" : "eye.slash.fill")
+                                        .font(.caption)
+                                    Text("顶层")
+                                        .font(.caption)
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(topLayer.isVisible ? Color.blue : Color.gray)
+                                .clipShape(Capsule())
+                            }
+                        }
+
+                        // 展开按钮
                         Button {
                             withAnimation {
                                 showPanel = true
                             }
                         } label: {
-                            HStack(spacing: 4) {
-                                Text("图层")
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                                Image(systemName: "chevron.up")
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.blue)
-                            .clipShape(Capsule())
+                            Image(systemName: "chevron.up")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
+                                .background(Color.blue.opacity(0.7))
+                                .clipShape(Capsule())
                         }
-                        .padding(.bottom, 8)
-                        Spacer()
                     }
+                    .padding(.bottom, 8)
+                    .padding(.horizontal, 8)
                 }
                 .frame(maxWidth: .infinity)
                 .transition(.opacity)

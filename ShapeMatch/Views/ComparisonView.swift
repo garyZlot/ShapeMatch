@@ -23,6 +23,8 @@ struct ComparisonView: View {
     @State private var fineTunePanelPosition = CGPoint(x: 0, y: 0)
     @State private var allLayersLockedScale: CGFloat = 1.0 // 所有图层锁定时的整体缩放
     @State private var lastAllLayersLockedScale: CGFloat = 1.0 // 记录上次的缩放值
+    @State private var showScaleIndicator = false // 是否显示缩放提示
+    @State private var scaleIndicatorWorkItem: DispatchWorkItem? // 缩放提示定时器
     @State private var autoSaveWorkItem: DispatchWorkItem?
     @State private var snapshotCount = 0
     @State private var currentProjectId: UUID?  // 当前项目的 ID
@@ -251,6 +253,7 @@ struct ComparisonView: View {
             // 重置整体缩放
             allLayersLockedScale = 1.0
             lastAllLayersLockedScale = 1.0
+            showScaleIndicator = false
 
             layers = layers.map { layer in
                 Layer(
@@ -390,7 +393,7 @@ struct ComparisonView: View {
                 }
 
                 // 所有图层锁定时的提示
-                if areAllLayersLocked && allLayersLockedScale != 1.0 {
+                if areAllLayersLocked && showScaleIndicator && allLayersLockedScale != 1.0 {
                     VStack {
                         Spacer()
                         HStack {
@@ -406,6 +409,7 @@ struct ComparisonView: View {
                         }
                         Spacer()
                     }
+                    .transition(.opacity)
                 }
             }
             .frame(
@@ -425,6 +429,21 @@ struct ComparisonView: View {
                         let delta = value / lastAllLayersLockedScale
                         lastAllLayersLockedScale = value
                         allLayersLockedScale = max(0.5, min(allLayersLockedScale * delta, 3.0))
+
+                        // 显示缩放提示
+                        showScaleIndicator = true
+
+                        // 取消之前的定时器
+                        scaleIndicatorWorkItem?.cancel()
+
+                        // 设置新的定时器，2秒后隐藏
+                        let workItem = DispatchWorkItem {
+                            withAnimation {
+                                showScaleIndicator = false
+                            }
+                        }
+                        scaleIndicatorWorkItem = workItem
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: workItem)
                     }
                     .onEnded { _ in
                         lastAllLayersLockedScale = 1.0
