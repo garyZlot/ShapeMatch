@@ -121,18 +121,33 @@ struct HomeView: View {
             }
 
             // 示例图片按钮
-            Button {
-                loadSampleImages()
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "photo.stack")
-                        .font(.caption)
-                    Text("使用示例图片")
-                        .font(.caption)
+            HStack(spacing: 16) {
+                Button {
+                    loadSampleImages()
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "photo.stack")
+                            .font(.caption)
+                        Text("使用示例图片")
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.blue)
                 }
-                .foregroundStyle(.blue)
+                .buttonStyle(.borderless)
+
+                Button {
+                    loadSpotDifferenceImages()
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "eye.circle")
+                            .font(.caption)
+                        Text("使用找不同图片")
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.orange)
+                }
+                .buttonStyle(.borderless)
             }
-            .buttonStyle(.borderless)
         }
     }
 
@@ -182,6 +197,15 @@ struct HomeView: View {
 
     private func loadSampleImages() {
         if let img1 = UIImage(named: "pindou1"), let img2 = UIImage(named: "pindou2") {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                leftImage = img1
+                rightImage = img2
+            }
+        }
+    }
+
+    private func loadSpotDifferenceImages() {
+        if let img1 = UIImage(named: "zhaobutong1"), let img2 = UIImage(named: "zhaobutong2") {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 leftImage = img1
                 rightImage = img2
